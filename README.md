@@ -55,7 +55,8 @@ project/
 ├── freeway/
 │   ├── README.md              # Freeway model, assumptions, metrics, and sources
 │   ├── __init__.py            # Python package marker
-│   ├── model.py               # IDM dynamics, merges, ramp entry, and detectors
+│   ├── behavior.py            # IDM car following, lane changes, merge courtesy
+│   ├── model.py               # Simulation loop: arrivals, ramp entry, detectors, metrics
 │   ├── run.py                 # Experiments and result export
 │   ├── verify.py              # Independent physical checks
 │   ├── viewer_template.html   # Freeway viewer source
@@ -67,7 +68,8 @@ project/
 │   ├── README.md              # Signal model, interfaces, experiments, and sources
 │   ├── __init__.py            # Python package marker
 │   ├── model.py               # Arrivals, road/external queues, and stop-line service
-│   ├── observation.py         # Detector adapter, queue estimates, and forecasts
+│   ├── detector.py            # Interval counts and injected detector faults
+│   ├── observation.py         # Queue estimates and forecasts from detector reports
 │   ├── control.py             # Phase state machine and signal policies
 │   ├── run.py                 # Paired experiments and result export
 │   ├── verify.py              # Signal, accounting, and causality checks

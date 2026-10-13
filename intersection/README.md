@@ -36,8 +36,9 @@ Paths are relative to the project root. `run.py` is the only command-line entry 
 | File | Responsibility | Start with |
 | --- | --- | --- |
 | `intersection/configs/default.json` | Demand, timing, storage, control, and observation parameters | `scenarios`, `fixed_green_s` |
-| `intersection/model.py` | Arrivals, finite queues, stop-line service, truth, and metrics | `make_arrivals()`, `simulate()` |
-| `intersection/observation.py` | Count adapter, queue estimation, arrival forecasting | `receive()`, `estimates()`, `predict()` |
+| `intersection/model.py` | Arrivals, finite queues, stop-line service, truth, and metrics | `make_arrivals()`, `IntersectionSimulation.run()` |
+| `intersection/detector.py` | Interval entry/stop-line counts and injected missing/delayed faults | `StopLineDetectors.report()` |
+| `intersection/observation.py` | Queue estimation and arrival forecasting from detector reports | `receive()`, `estimates()`, `predict()` |
 | `intersection/control.py` | Bounded phase state machine and three policies | `SignalController.update()` |
 | `intersection/run.py` | Paired experiments, export, and aggregation | `run_experiments()` |
 | `intersection/verify.py` | Independent count, analytic, timing, and causality checks | `audit()`, saturated-queue test |

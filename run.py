@@ -27,8 +27,10 @@ def main(argv=None):
         command.add_argument('--output', type=Path, default=ROOT / 'results' / branch,
                              help=f'Result directory (default: results/{branch})')
         if branch == 'intersection':
-            command.add_argument('--scenario', action='append', help='Select a scenario; repeat for several (default: all)')
-            command.add_argument('--seed', type=int, action='append', help='Select a seed; repeat for several (default: config seeds)')
+            command.add_argument('--scenario', action='append',
+                                 help='Select a scenario; repeat for several (default: all)')
+            command.add_argument('--seed', type=int, action='append',
+                                 help='Select a seed; repeat for several (default: config seeds)')
     check = commands.add_parser('check', help='Run independent verification checks')
     check.add_argument('branch', choices=(*BRANCHES, 'all'), nargs='?', default='all')
     args = parser.parse_args(argv)

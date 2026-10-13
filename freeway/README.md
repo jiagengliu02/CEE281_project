@@ -89,7 +89,8 @@ Paths below are relative to the project root. Run commands from that root.
 
 | File | Responsibility |
 | --- | --- |
-| `freeway/model.py` | Vehicle state, IDM motion, merging, lane changes, detectors, and metrics |
+| `freeway/behavior.py` | Vehicle state, IDM car following, MOBIL-style lane changes, merge courtesy |
+| `freeway/model.py` | Simulation loop (`FreewaySimulation`): arrivals, road entry, ramp control, detectors, metrics |
 | `freeway/run.py` | The three paired experiments and CSV/HTML export |
 | `freeway/verify.py` | Independent physical checks and timestep sensitivity |
 | `freeway/configs/default.json` | Default road, ramp, work-zone, and demand settings |

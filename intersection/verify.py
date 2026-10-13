@@ -5,9 +5,10 @@ import json
 from pathlib import Path
 import unittest
 
-from .model import simulate, make_arrivals, validate
 from .control import SignalController
-from .observation import ObservationPipeline, APPROACHES
+from .detector import APPROACHES
+from .model import make_arrivals, simulate, validate
+from .observation import ObservationPipeline
 
 ROOT = Path(__file__).resolve().parent
 CONFIG = json.loads((ROOT / 'configs/default.json').read_text())
@@ -23,10 +24,20 @@ def small_config():
 
 
 def audit(test, c, run):
-    m, events, records = run['metrics'], run['events'], run['control_log']
-    test.assertEqual(m['generated_vehicles'], m['exited_vehicles'] + m['residual_queue_veh'] + m['residual_external_veh'])
-    transitions = [r for i, r in enumerate(records) if i == 0 or r['action'] == 'transition']
-    starts = [r['apply_time_s'] for r in transitions]
+    """Independent checks of one run, re-derived from its event and control logs."""
+    m = run['metrics']
+    test.assertEqual(m['generated_vehicles'],
+                     m['exited_vehicles'] + m['residual_queue_veh'] + m['residual_external_veh'])
+    transitions = [r for i, r in enumerate(run['control_log']) if i == 0 or r['action'] == 'transition']
+    audit_phase_sequence(test, c, transitions)
+    audit_departures(test, c, run, transitions)
+    audit_fifo(test, run['events'])
+    audit_detector_counts(test, run)
+    audit_delay(test, c, run)
+
+
+def audit_phase_sequence(test, c, transitions):
+    """green -> yellow -> all_red -> other green, with legal durations."""
     for old, new in zip(transitions, transitions[1:]):
         group, stage = old['value'].split('_', 1)
         elapsed = new['apply_time_s'] - old['apply_time_s']
@@ -40,8 +51,13 @@ def audit(test, c, run):
         else:
             test.assertEqual(elapsed, c['all_red_s'])
             test.assertEqual(new['value'], ('EW' if group == 'NS' else 'NS') + '_green')
+
+
+def audit_departures(test, c, run, transitions):
+    """Departures only on green, after start-up loss, at saturation headway, once each."""
+    starts = [r['apply_time_s'] for r in transitions]
     last_exit, departed_ids = {}, set()
-    for e in events:
+    for e in run['events']:
         if e['event'] != 'departure':
             continue
         phase = transitions[bisect_right(starts, e['time_s']) - 1]
@@ -54,26 +70,42 @@ def audit(test, c, run):
         last_exit[e['approach']] = e['time_s']
         test.assertNotIn(e['vehicle_id'], departed_ids)
         departed_ids.add(e['vehicle_id'])
-    test.assertEqual(len(departed_ids), m['exited_vehicles'])
+    test.assertEqual(len(departed_ids), run['metrics']['exited_vehicles'])
+
+
+def audit_fifo(test, events):
     for a in APPROACHES:
-        expected = [e['vehicle_id'] for e in events if e['approach'] == a and e['event'] == 'arrival']
-        actual = [e['vehicle_id'] for e in events if e['approach'] == a and e['event'] == 'departure']
-        test.assertEqual(actual, expected[:len(actual)])
+        arrived = [e['vehicle_id'] for e in events if e['approach'] == a and e['event'] == 'arrival']
+        departed = [e['vehicle_id'] for e in events if e['approach'] == a and e['event'] == 'departure']
+        test.assertEqual(departed, arrived[:len(departed)])
+
+
+def audit_detector_counts(test, run):
+    """Every non-missing report matches a recount of the event log."""
+    events = run['events']
     for o in run['observations']:
         if o['quality_flag'] == 'missing':
             test.assertIsNone(o['count'])
             test.assertIsNone(o['cumulative_entered'])
             continue
-        for event, field, cumulative in [('entry', 'count', 'cumulative_entered'), ('departure', 'departure_count', 'cumulative_departed')]:
+        for event, field, cumulative in [('entry', 'count', 'cumulative_entered'),
+                                         ('departure', 'departure_count', 'cumulative_departed')]:
             relevant = [e for e in events if e['event'] == event and e['approach'] == o['approach']]
-            test.assertEqual(o[field], sum(o['interval_start_s'] <= e['time_s'] < o['interval_end_s'] for e in relevant))
+            test.assertEqual(o[field], sum(o['interval_start_s'] <= e['time_s'] < o['interval_end_s']
+                                           for e in relevant))
             test.assertEqual(o[cumulative], sum(e['time_s'] < o['interval_end_s'] for e in relevant))
+
+
+def audit_delay(test, c, run):
+    m = run['metrics']
     for v in run['vehicles']:
         if v['departure_time_s'] is not None:
             test.assertGreaterEqual(v['departure_time_s'], v['entered_time_s'])
         if v['entered_time_s'] is not None:
             test.assertGreaterEqual(v['entered_time_s'], v['arrival_time_s'])
-    independent_delay = sum((v['departure_time_s'] if v['departure_time_s'] is not None else c['duration_s']) - v['arrival_time_s'] for v in run['vehicles'])
+    independent_delay = sum(
+        (v['departure_time_s'] if v['departure_time_s'] is not None else c['duration_s']) - v['arrival_time_s']
+        for v in run['vehicles'])
     test.assertAlmostEqual(independent_delay, m['total_delay_vehicle_s'], places=6)
     # Raw Poisson times are rounded up to the simulation grid; this is the only
     # difference from the queue integral. End-of-run unfinished arrivals are included.
@@ -123,7 +155,8 @@ class SignalTests(unittest.TestCase):
     def test_delayed_data_is_not_visible_early(self):
         c = small_config()
         c['scenarios']['test']['demand'][0]['rates_vph']['N'] = 600
-        c['scenarios']['test']['faults'] = [{'approach': 'N', 'start_s': 0, 'end_s': 50, 'kind': 'delay', 'delay_s': 20}]
+        c['scenarios']['test']['faults'] = [
+            {'approach': 'N', 'start_s': 0, 'end_s': 50, 'kind': 'delay', 'delay_s': 20}]
         run = simulate(c, 'test', 'adaptive', 11)
         for f in run['frames']:
             if f['time_s'] < 25:
@@ -155,7 +188,8 @@ class SignalTests(unittest.TestCase):
             keys[method] = [(r['issue_time_s'], r['target_time_s'], r['segment_id']) for r in rows]
             for r in rows:
                 self.assertEqual(r['target_time_s'] - r['issue_time_s'], CONFIG['forecast_horizon_s'])
-                actual = sum(e['event'] == 'entry' and e['approach'] == r['segment_id'] and r['issue_time_s'] <= e['time_s'] < r['target_time_s'] for e in run['events'])
+                actual = sum(e['event'] == 'entry' and e['approach'] == r['segment_id']
+                             and r['issue_time_s'] <= e['time_s'] < r['target_time_s'] for e in run['events'])
                 self.assertEqual(actual, r['actual_value'])
         self.assertEqual(keys['ema'], keys['moving_average'])
 
@@ -201,7 +235,8 @@ class SignalTests(unittest.TestCase):
 def verify():
     """Run signal checks and write verification.json without import side effects."""
     REPORT.clear()
-    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(SignalTests))
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(SignalTests)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
     REPORT['tests_run'] = result.testsRun
     REPORT['passed'] = result.wasSuccessful()
     out = ROOT.parent / 'results/intersection'
