@@ -1,0 +1,135 @@
+{
+  "equilibrium_free_motion_and_stop": "passed",
+  "unsafe_merge_rejected_safe_merge_accepted_closed_target_rejected": "passed",
+  "courtesy_request_and_yielding_vehicle_turn": "passed",
+  "open_audit": {
+    "conservation": "passed every time step",
+    "same_lane_overlap": "none",
+    "negative_speed": "none",
+    "closed_lane_violation": "none",
+    "detector_counts_by_lane": {
+      "200_lane_0": 126,
+      "200_lane_1": 127,
+      "200_lane_2": 123,
+      "550_lane_0": 126,
+      "550_lane_1": 139,
+      "550_lane_2": 163,
+      "900_lane_0": 121,
+      "900_lane_1": 139,
+      "900_lane_2": 160
+    },
+    "guard_interventions": 0
+  },
+  "closure_audit": {
+    "conservation": "passed every time step",
+    "same_lane_overlap": "none",
+    "negative_speed": "none",
+    "closed_lane_violation": "none",
+    "detector_counts_by_lane": {
+      "200_lane_0": 127,
+      "200_lane_1": 121,
+      "200_lane_2": 128,
+      "550_lane_0": 57,
+      "550_lane_1": 152,
+      "550_lane_2": 209,
+      "900_lane_0": 45,
+      "900_lane_1": 146,
+      "900_lane_2": 196
+    },
+    "guard_interventions": 0
+  },
+  "fixed_audit": {
+    "conservation": "passed every time step",
+    "same_lane_overlap": "none",
+    "negative_speed": "none",
+    "closed_lane_violation": "none",
+    "detector_counts_by_lane": {
+      "200_lane_0": 126,
+      "200_lane_1": 132,
+      "200_lane_2": 118,
+      "550_lane_0": 42,
+      "550_lane_1": 159,
+      "550_lane_2": 204,
+      "900_lane_0": 64,
+      "900_lane_1": 128,
+      "900_lane_2": 181
+    },
+    "guard_interventions": 0
+  },
+  "finite_demand_pulse_clears_through_construction": {
+    "mode": "closure",
+    "generated_vehicles": 70,
+    "generated_main": 60,
+    "generated_ramp": 10,
+    "exited_vehicles": 70,
+    "remaining_on_road": 0,
+    "remaining_main_queue": 0,
+    "remaining_ramp_queue": 0,
+    "max_main_queue": 0,
+    "max_ramp_queue": 0,
+    "max_road_queue": 0,
+    "throughput_vph": 420.0,
+    "total_time_in_system_vehicle_s": 2642.7,
+    "total_delay_vehicle_s": 218.01,
+    "minimum_gap_m": 12.9736,
+    "strongest_braking_mps2": -2.9764,
+    "safety_interventions": 0,
+    "yield_records": 8,
+    "lane_changes": 67,
+    "mandatory_merges": 19,
+    "conservation_passed": true,
+    "closed_lane_violations": 0
+  },
+  "closure_time_step_sensitivity": {
+    "exited_vehicles": {
+      "dt_0.05": 385,
+      "dt_0.025": 387
+    },
+    "total_delay_vehicle_s": {
+      "dt_0.05": 7902.25,
+      "dt_0.025": 7675.65
+    },
+    "minimum_gap_m": {
+      "dt_0.05": 1.7709,
+      "dt_0.025": 1.6493
+    },
+    "remaining_main_queue": {
+      "dt_0.05": 0,
+      "dt_0.025": 0
+    },
+    "remaining_ramp_queue": {
+      "dt_0.05": 0,
+      "dt_0.025": 0
+    },
+    "mandatory_merges": {
+      "dt_0.05": 114,
+      "dt_0.025": 121
+    }
+  },
+  "time_step_note": "Lane/gap event timing is discrete; sensitivity is reported, not forced to match.",
+  "zero_demand_and_missing_measurements": "passed",
+  "overload_boundary_accounting": {
+    "mode": "closure",
+    "generated_vehicles": 440,
+    "generated_main": 400,
+    "generated_ramp": 40,
+    "exited_vehicles": 66,
+    "remaining_on_road": 115,
+    "remaining_main_queue": 229,
+    "remaining_ramp_queue": 30,
+    "max_main_queue": 229,
+    "max_ramp_queue": 30,
+    "max_road_queue": 58,
+    "throughput_vph": 1980.0,
+    "total_time_in_system_vehicle_s": 23450.55,
+    "total_delay_vehicle_s": 19351.16,
+    "minimum_gap_m": 1.7724,
+    "strongest_braking_mps2": -3.5334,
+    "safety_interventions": 0,
+    "yield_records": 43,
+    "lane_changes": 27,
+    "mandatory_merges": 18,
+    "conservation_passed": true,
+    "closed_lane_violations": 0
+  }
+}

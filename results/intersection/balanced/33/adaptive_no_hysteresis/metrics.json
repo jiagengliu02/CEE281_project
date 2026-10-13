@@ -1,0 +1,77 @@
+{
+  "scenario_id": "balanced",
+  "mode": "adaptive_no_hysteresis",
+  "seed": 33,
+  "demand_id": "310dcfe927d44c1303965d2389ca102ee8fb646e9645a0cd2205174ffeb03f77",
+  "model_version": "signal-point-queue-1.0",
+  "controller_version": "bounded-queue-response-1.0",
+  "generated_vehicles": 474,
+  "exited_vehicles": 469,
+  "throughput_vph": 1876.0,
+  "total_delay_vehicle_s": 8680.305444580003,
+  "boundary_delay_vehicle_s": 115.80544457999986,
+  "residual_queue_veh": 5,
+  "residual_external_veh": 0,
+  "queue_integral_vehicle_s": 8564.5,
+  "arrival_grid_correction_vehicle_s": 115.80544458000259,
+  "approaches": {
+    "N": {
+      "generated": 130,
+      "exited": 128,
+      "total_delay_vehicle_s": 2979.846398500002,
+      "boundary_delay_vehicle_s": 32.84639850000012,
+      "mean_accrued_delay_s_per_arrival": 22.92189537307694,
+      "max_queue_veh": 11,
+      "max_external_queue_veh": 0,
+      "residual_queue_veh": 2,
+      "residual_external_veh": 0
+    },
+    "S": {
+      "generated": 115,
+      "exited": 115,
+      "total_delay_vehicle_s": 1403.9307341499998,
+      "boundary_delay_vehicle_s": 27.430734149999612,
+      "mean_accrued_delay_s_per_arrival": 12.20809334043478,
+      "max_queue_veh": 6,
+      "max_external_queue_veh": 0,
+      "residual_queue_veh": 0,
+      "residual_external_veh": 0
+    },
+    "E": {
+      "generated": 117,
+      "exited": 117,
+      "total_delay_vehicle_s": 2257.20644996,
+      "boundary_delay_vehicle_s": 27.206449960000242,
+      "mean_accrued_delay_s_per_arrival": 19.29236282017094,
+      "max_queue_veh": 7,
+      "max_external_queue_veh": 0,
+      "residual_queue_veh": 0,
+      "residual_external_veh": 0
+    },
+    "W": {
+      "generated": 112,
+      "exited": 109,
+      "total_delay_vehicle_s": 2039.3218619699999,
+      "boundary_delay_vehicle_s": 28.321861969999894,
+      "mean_accrued_delay_s_per_arrival": 18.208230910446428,
+      "max_queue_veh": 10,
+      "max_external_queue_veh": 0,
+      "residual_queue_veh": 3,
+      "residual_external_veh": 0
+    }
+  },
+  "forecast": {
+    "moving_average": {
+      "mae_veh": 2.123913043478261,
+      "sample_count": 460
+    },
+    "ema": {
+      "mae_veh": 2.333415221405123,
+      "sample_count": 460
+    }
+  },
+  "queue_estimate_mae_veh": 0.5861064891846922,
+  "fallback_time_s": 5,
+  "service_imbalance_s": 10.713802032642159,
+  "conservation_passed": true
+}

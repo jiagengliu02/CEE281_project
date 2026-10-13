@@ -1,0 +1,965 @@
+{
+  "scenario_audits": {
+    "balanced/fixed": {
+      "scenario_id": "balanced",
+      "mode": "fixed",
+      "seed": 11,
+      "demand_id": "20419cf1b8ea5caaf190d7b593bd16d6a5b345ef14543db652f025f08f4e3f1a",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 430,
+      "exited_vehicles": 424,
+      "throughput_vph": 1696.0,
+      "total_delay_vehicle_s": 7240.1588984900045,
+      "boundary_delay_vehicle_s": 107.1588984900009,
+      "residual_queue_veh": 6,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 7133.0,
+      "arrival_grid_correction_vehicle_s": 107.1588984900045,
+      "approaches": {
+        "N": {
+          "generated": 110,
+          "exited": 108,
+          "total_delay_vehicle_s": 2042.2138939700003,
+          "boundary_delay_vehicle_s": 27.21389397000008,
+          "mean_accrued_delay_s_per_arrival": 18.56558085427273,
+          "max_queue_veh": 10,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 107,
+          "exited": 107,
+          "total_delay_vehicle_s": 1578.2592911700015,
+          "boundary_delay_vehicle_s": 27.25929117000027,
+          "mean_accrued_delay_s_per_arrival": 14.750086833364499,
+          "max_queue_veh": 7,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 113,
+          "exited": 112,
+          "total_delay_vehicle_s": 1851.6229767800019,
+          "boundary_delay_vehicle_s": 28.622976780000446,
+          "mean_accrued_delay_s_per_arrival": 16.386044042300902,
+          "max_queue_veh": 9,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 1,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 100,
+          "exited": 97,
+          "total_delay_vehicle_s": 1768.0627365700007,
+          "boundary_delay_vehicle_s": 24.0627365700001,
+          "mean_accrued_delay_s_per_arrival": 17.680627365700005,
+          "max_queue_veh": 8,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 3,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 1.923913043478261,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 2.0862816686559182,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.41098169717138106,
+      "fallback_time_s": 0,
+      "service_imbalance_s": 3.8154940209082326,
+      "conservation_passed": true
+    },
+    "balanced/adaptive": {
+      "scenario_id": "balanced",
+      "mode": "adaptive",
+      "seed": 11,
+      "demand_id": "20419cf1b8ea5caaf190d7b593bd16d6a5b345ef14543db652f025f08f4e3f1a",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 430,
+      "exited_vehicles": 425,
+      "throughput_vph": 1700.0,
+      "total_delay_vehicle_s": 5027.658898490003,
+      "boundary_delay_vehicle_s": 107.1588984900009,
+      "residual_queue_veh": 5,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 4920.5,
+      "arrival_grid_correction_vehicle_s": 107.15889849000268,
+      "approaches": {
+        "N": {
+          "generated": 110,
+          "exited": 107,
+          "total_delay_vehicle_s": 1296.7138939700008,
+          "boundary_delay_vehicle_s": 27.21389397000008,
+          "mean_accrued_delay_s_per_arrival": 11.788308127000008,
+          "max_queue_veh": 7,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 3,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 107,
+          "exited": 107,
+          "total_delay_vehicle_s": 1167.259291170001,
+          "boundary_delay_vehicle_s": 27.25929117000027,
+          "mean_accrued_delay_s_per_arrival": 10.908965338037392,
+          "max_queue_veh": 6,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 113,
+          "exited": 113,
+          "total_delay_vehicle_s": 1332.122976780001,
+          "boundary_delay_vehicle_s": 28.622976780000446,
+          "mean_accrued_delay_s_per_arrival": 11.78869890955753,
+          "max_queue_veh": 6,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 100,
+          "exited": 98,
+          "total_delay_vehicle_s": 1231.5627365700002,
+          "boundary_delay_vehicle_s": 24.0627365700001,
+          "mean_accrued_delay_s_per_arrival": 12.315627365700003,
+          "max_queue_veh": 5,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 1.923913043478261,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 2.0862816686559182,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.5124792013311148,
+      "fallback_time_s": 5,
+      "service_imbalance_s": 1.4066620276626107,
+      "conservation_passed": true
+    },
+    "balanced/adaptive_no_hysteresis": {
+      "scenario_id": "balanced",
+      "mode": "adaptive_no_hysteresis",
+      "seed": 11,
+      "demand_id": "20419cf1b8ea5caaf190d7b593bd16d6a5b345ef14543db652f025f08f4e3f1a",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 430,
+      "exited_vehicles": 426,
+      "throughput_vph": 1704.0,
+      "total_delay_vehicle_s": 5165.158898490003,
+      "boundary_delay_vehicle_s": 107.1588984900009,
+      "residual_queue_veh": 4,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 5058.0,
+      "arrival_grid_correction_vehicle_s": 107.15889849000268,
+      "approaches": {
+        "N": {
+          "generated": 110,
+          "exited": 108,
+          "total_delay_vehicle_s": 1536.2138939700008,
+          "boundary_delay_vehicle_s": 27.21389397000008,
+          "mean_accrued_delay_s_per_arrival": 13.965580854272734,
+          "max_queue_veh": 9,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 107,
+          "exited": 107,
+          "total_delay_vehicle_s": 1121.2592911700006,
+          "boundary_delay_vehicle_s": 27.25929117000027,
+          "mean_accrued_delay_s_per_arrival": 10.479058795981313,
+          "max_queue_veh": 6,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 113,
+          "exited": 113,
+          "total_delay_vehicle_s": 1508.1229767800019,
+          "boundary_delay_vehicle_s": 28.622976780000446,
+          "mean_accrued_delay_s_per_arrival": 13.346221033451345,
+          "max_queue_veh": 9,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 100,
+          "exited": 98,
+          "total_delay_vehicle_s": 999.5627365700001,
+          "boundary_delay_vehicle_s": 24.0627365700001,
+          "mean_accrued_delay_s_per_arrival": 9.9956273657,
+          "max_queue_veh": 5,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 1.923913043478261,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 2.0862816686559182,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.45798668885191346,
+      "fallback_time_s": 5,
+      "service_imbalance_s": 3.969953488572733,
+      "conservation_passed": true
+    },
+    "directional_shift/fixed": {
+      "scenario_id": "directional_shift",
+      "mode": "fixed",
+      "seed": 11,
+      "demand_id": "8401c572efbfbdd8e1fff1f8d50765492b9c6f26d1192e5285cd434c65fef491",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 501,
+      "exited_vehicles": 458,
+      "throughput_vph": 1832.0,
+      "total_delay_vehicle_s": 19145.55410904,
+      "boundary_delay_vehicle_s": 123.55410904000009,
+      "residual_queue_veh": 43,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 19022.0,
+      "arrival_grid_correction_vehicle_s": 123.55410904000018,
+      "approaches": {
+        "N": {
+          "generated": 182,
+          "exited": 158,
+          "total_delay_vehicle_s": 8883.84297274,
+          "boundary_delay_vehicle_s": 44.84297273999966,
+          "mean_accrued_delay_s_per_arrival": 48.81232402604395,
+          "max_queue_veh": 29,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 24,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 171,
+          "exited": 154,
+          "total_delay_vehicle_s": 7976.05157514,
+          "boundary_delay_vehicle_s": 41.05157514000024,
+          "mean_accrued_delay_s_per_arrival": 46.64357646280702,
+          "max_queue_veh": 23,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 17,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 83,
+          "exited": 83,
+          "total_delay_vehicle_s": 1213.9610804199997,
+          "boundary_delay_vehicle_s": 21.461080419999977,
+          "mean_accrued_delay_s_per_arrival": 14.626037113493972,
+          "max_queue_veh": 7,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 65,
+          "exited": 63,
+          "total_delay_vehicle_s": 1071.6984807400002,
+          "boundary_delay_vehicle_s": 16.198480740000225,
+          "mean_accrued_delay_s_per_arrival": 16.487668934461542,
+          "max_queue_veh": 6,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 2.0543478260869565,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 2.2301701203262616,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.47088186356073214,
+      "fallback_time_s": 0,
+      "service_imbalance_s": 34.18628691254998,
+      "conservation_passed": true
+    },
+    "directional_shift/adaptive": {
+      "scenario_id": "directional_shift",
+      "mode": "adaptive",
+      "seed": 11,
+      "demand_id": "8401c572efbfbdd8e1fff1f8d50765492b9c6f26d1192e5285cd434c65fef491",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 501,
+      "exited_vehicles": 496,
+      "throughput_vph": 1984.0,
+      "total_delay_vehicle_s": 6052.554109039999,
+      "boundary_delay_vehicle_s": 123.55410904000009,
+      "residual_queue_veh": 5,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 5929.0,
+      "arrival_grid_correction_vehicle_s": 123.55410903999928,
+      "approaches": {
+        "N": {
+          "generated": 182,
+          "exited": 180,
+          "total_delay_vehicle_s": 2062.8429727399994,
+          "boundary_delay_vehicle_s": 44.84297273999966,
+          "mean_accrued_delay_s_per_arrival": 11.334302048021975,
+          "max_queue_veh": 8,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 171,
+          "exited": 168,
+          "total_delay_vehicle_s": 1852.0515751399998,
+          "boundary_delay_vehicle_s": 41.05157514000024,
+          "mean_accrued_delay_s_per_arrival": 10.830710965730994,
+          "max_queue_veh": 11,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 3,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 83,
+          "exited": 83,
+          "total_delay_vehicle_s": 1218.4610804199997,
+          "boundary_delay_vehicle_s": 21.461080419999977,
+          "mean_accrued_delay_s_per_arrival": 14.680253980963851,
+          "max_queue_veh": 6,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 65,
+          "exited": 65,
+          "total_delay_vehicle_s": 919.1984807400003,
+          "boundary_delay_vehicle_s": 16.198480740000225,
+          "mean_accrued_delay_s_per_arrival": 14.141515088307697,
+          "max_queue_veh": 5,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 2.0543478260869565,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 2.2301701203262616,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.4995840266222962,
+      "fallback_time_s": 5,
+      "service_imbalance_s": 3.8495430152328574,
+      "conservation_passed": true
+    },
+    "directional_shift/adaptive_no_hysteresis": {
+      "scenario_id": "directional_shift",
+      "mode": "adaptive_no_hysteresis",
+      "seed": 11,
+      "demand_id": "8401c572efbfbdd8e1fff1f8d50765492b9c6f26d1192e5285cd434c65fef491",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 501,
+      "exited_vehicles": 496,
+      "throughput_vph": 1984.0,
+      "total_delay_vehicle_s": 6435.054109039998,
+      "boundary_delay_vehicle_s": 123.55410904000009,
+      "residual_queue_veh": 5,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 6311.5,
+      "arrival_grid_correction_vehicle_s": 123.55410903999837,
+      "approaches": {
+        "N": {
+          "generated": 182,
+          "exited": 180,
+          "total_delay_vehicle_s": 2397.342972739998,
+          "boundary_delay_vehicle_s": 44.84297273999966,
+          "mean_accrued_delay_s_per_arrival": 13.172214135934055,
+          "max_queue_veh": 9,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 171,
+          "exited": 168,
+          "total_delay_vehicle_s": 1951.0515751400003,
+          "boundary_delay_vehicle_s": 41.05157514000024,
+          "mean_accrued_delay_s_per_arrival": 11.409658334152049,
+          "max_queue_veh": 10,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 3,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 83,
+          "exited": 83,
+          "total_delay_vehicle_s": 1452.4610804199997,
+          "boundary_delay_vehicle_s": 21.461080419999977,
+          "mean_accrued_delay_s_per_arrival": 17.499531089397586,
+          "max_queue_veh": 9,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 65,
+          "exited": 65,
+          "total_delay_vehicle_s": 634.1984807400003,
+          "boundary_delay_vehicle_s": 16.198480740000225,
+          "mean_accrued_delay_s_per_arrival": 9.756899703692312,
+          "max_queue_veh": 4,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 2.0543478260869565,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 2.2301701203262616,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.5037437603993344,
+      "fallback_time_s": 5,
+      "service_imbalance_s": 7.742631385705273,
+      "conservation_passed": true
+    },
+    "detector_fault/fixed": {
+      "scenario_id": "detector_fault",
+      "mode": "fixed",
+      "seed": 11,
+      "demand_id": "8401c572efbfbdd8e1fff1f8d50765492b9c6f26d1192e5285cd434c65fef491",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 501,
+      "exited_vehicles": 458,
+      "throughput_vph": 1832.0,
+      "total_delay_vehicle_s": 19145.55410904,
+      "boundary_delay_vehicle_s": 123.55410904000009,
+      "residual_queue_veh": 43,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 19022.0,
+      "arrival_grid_correction_vehicle_s": 123.55410904000018,
+      "approaches": {
+        "N": {
+          "generated": 182,
+          "exited": 158,
+          "total_delay_vehicle_s": 8883.84297274,
+          "boundary_delay_vehicle_s": 44.84297273999966,
+          "mean_accrued_delay_s_per_arrival": 48.81232402604395,
+          "max_queue_veh": 29,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 24,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 171,
+          "exited": 154,
+          "total_delay_vehicle_s": 7976.05157514,
+          "boundary_delay_vehicle_s": 41.05157514000024,
+          "mean_accrued_delay_s_per_arrival": 46.64357646280702,
+          "max_queue_veh": 23,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 17,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 83,
+          "exited": 83,
+          "total_delay_vehicle_s": 1213.9610804199997,
+          "boundary_delay_vehicle_s": 21.461080419999977,
+          "mean_accrued_delay_s_per_arrival": 14.626037113493972,
+          "max_queue_veh": 7,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 65,
+          "exited": 63,
+          "total_delay_vehicle_s": 1071.6984807400002,
+          "boundary_delay_vehicle_s": 16.198480740000225,
+          "mean_accrued_delay_s_per_arrival": 16.487668934461542,
+          "max_queue_veh": 6,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 2.0705314009661837,
+          "sample_count": 414
+        },
+        "ema": {
+          "mae_veh": 2.21729651764229,
+          "sample_count": 414
+        }
+      },
+      "queue_estimate_mae_veh": 0.6231281198003328,
+      "fallback_time_s": 0,
+      "service_imbalance_s": 34.18628691254998,
+      "conservation_passed": true
+    },
+    "detector_fault/adaptive": {
+      "scenario_id": "detector_fault",
+      "mode": "adaptive",
+      "seed": 11,
+      "demand_id": "8401c572efbfbdd8e1fff1f8d50765492b9c6f26d1192e5285cd434c65fef491",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 501,
+      "exited_vehicles": 496,
+      "throughput_vph": 1984.0,
+      "total_delay_vehicle_s": 9695.554109039997,
+      "boundary_delay_vehicle_s": 123.55410904000009,
+      "residual_queue_veh": 5,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 9572.0,
+      "arrival_grid_correction_vehicle_s": 123.55410903999655,
+      "approaches": {
+        "N": {
+          "generated": 182,
+          "exited": 182,
+          "total_delay_vehicle_s": 3908.842972739999,
+          "boundary_delay_vehicle_s": 44.84297273999966,
+          "mean_accrued_delay_s_per_arrival": 21.477159190879114,
+          "max_queue_veh": 19,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 171,
+          "exited": 170,
+          "total_delay_vehicle_s": 3354.0515751399976,
+          "boundary_delay_vehicle_s": 41.05157514000024,
+          "mean_accrued_delay_s_per_arrival": 19.614336696725132,
+          "max_queue_veh": 19,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 1,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 83,
+          "exited": 81,
+          "total_delay_vehicle_s": 1352.9610804199997,
+          "boundary_delay_vehicle_s": 21.461080419999977,
+          "mean_accrued_delay_s_per_arrival": 16.300735908674696,
+          "max_queue_veh": 6,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 65,
+          "exited": 63,
+          "total_delay_vehicle_s": 1079.6984807400004,
+          "boundary_delay_vehicle_s": 16.198480740000225,
+          "mean_accrued_delay_s_per_arrival": 16.61074585753847,
+          "max_queue_veh": 5,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 2,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 2.0705314009661837,
+          "sample_count": 414
+        },
+        "ema": {
+          "mae_veh": 2.21729651764229,
+          "sample_count": 414
+        }
+      },
+      "queue_estimate_mae_veh": 0.7795341098169717,
+      "fallback_time_s": 237,
+      "service_imbalance_s": 5.176423282204418,
+      "conservation_passed": true
+    },
+    "detector_fault/adaptive_no_hysteresis": {
+      "scenario_id": "detector_fault",
+      "mode": "adaptive_no_hysteresis",
+      "seed": 11,
+      "demand_id": "8401c572efbfbdd8e1fff1f8d50765492b9c6f26d1192e5285cd434c65fef491",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 501,
+      "exited_vehicles": 495,
+      "throughput_vph": 1980.0,
+      "total_delay_vehicle_s": 8798.054109039997,
+      "boundary_delay_vehicle_s": 123.55410904000009,
+      "residual_queue_veh": 6,
+      "residual_external_veh": 0,
+      "queue_integral_vehicle_s": 8674.5,
+      "arrival_grid_correction_vehicle_s": 123.55410903999655,
+      "approaches": {
+        "N": {
+          "generated": 182,
+          "exited": 179,
+          "total_delay_vehicle_s": 3689.342972739999,
+          "boundary_delay_vehicle_s": 44.84297273999966,
+          "mean_accrued_delay_s_per_arrival": 20.271115234835158,
+          "max_queue_veh": 17,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 3,
+          "residual_external_veh": 0
+        },
+        "S": {
+          "generated": 171,
+          "exited": 168,
+          "total_delay_vehicle_s": 2985.5515751399976,
+          "boundary_delay_vehicle_s": 41.05157514000024,
+          "mean_accrued_delay_s_per_arrival": 17.459365936491213,
+          "max_queue_veh": 14,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 3,
+          "residual_external_veh": 0
+        },
+        "E": {
+          "generated": 83,
+          "exited": 83,
+          "total_delay_vehicle_s": 1254.9610804199997,
+          "boundary_delay_vehicle_s": 21.461080419999977,
+          "mean_accrued_delay_s_per_arrival": 15.12001301710843,
+          "max_queue_veh": 9,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        },
+        "W": {
+          "generated": 65,
+          "exited": 65,
+          "total_delay_vehicle_s": 868.1984807400003,
+          "boundary_delay_vehicle_s": 16.198480740000225,
+          "mean_accrued_delay_s_per_arrival": 13.356899703692312,
+          "max_queue_veh": 4,
+          "max_external_queue_veh": 0,
+          "residual_queue_veh": 0,
+          "residual_external_veh": 0
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 2.0705314009661837,
+          "sample_count": 414
+        },
+        "ema": {
+          "mae_veh": 2.21729651764229,
+          "sample_count": 414
+        }
+      },
+      "queue_estimate_mae_veh": 0.6356073211314476,
+      "fallback_time_s": 237,
+      "service_imbalance_s": 6.914215531142846,
+      "conservation_passed": true
+    },
+    "heavy/fixed": {
+      "scenario_id": "heavy",
+      "mode": "fixed",
+      "seed": 11,
+      "demand_id": "89f1d359a13797fa015f35bbbb551ab48d8b00437988491ef1dafa4b9633e5ca",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 1077,
+      "exited_vehicles": 728,
+      "throughput_vph": 2912.0,
+      "total_delay_vehicle_s": 158686.16420636998,
+      "boundary_delay_vehicle_s": 55276.66420636999,
+      "residual_queue_veh": 140,
+      "residual_external_veh": 209,
+      "queue_integral_vehicle_s": 158412.0,
+      "arrival_grid_correction_vehicle_s": 274.16420636998373,
+      "approaches": {
+        "N": {
+          "generated": 278,
+          "exited": 182,
+          "total_delay_vehicle_s": 41976.95762223,
+          "boundary_delay_vehicle_s": 15404.457622230007,
+          "mean_accrued_delay_s_per_arrival": 150.99625043967626,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 63,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 61
+        },
+        "S": {
+          "generated": 270,
+          "exited": 182,
+          "total_delay_vehicle_s": 37117.75869973001,
+          "boundary_delay_vehicle_s": 11938.758699729997,
+          "mean_accrued_delay_s_per_arrival": 137.4731803693704,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 56,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 53
+        },
+        "E": {
+          "generated": 266,
+          "exited": 182,
+          "total_delay_vehicle_s": 42040.80682223998,
+          "boundary_delay_vehicle_s": 14587.806822239992,
+          "mean_accrued_delay_s_per_arrival": 158.04814594827062,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 49,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 49
+        },
+        "W": {
+          "generated": 263,
+          "exited": 182,
+          "total_delay_vehicle_s": 37550.64106217001,
+          "boundary_delay_vehicle_s": 13345.641062169996,
+          "mean_accrued_delay_s_per_arrival": 142.77810289798484,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 46,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 46
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 7.3478260869565215,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 6.736885202337052,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.2762063227953411,
+      "fallback_time_s": 0,
+      "service_imbalance_s": 20.57496557890022,
+      "conservation_passed": true
+    },
+    "heavy/adaptive": {
+      "scenario_id": "heavy",
+      "mode": "adaptive",
+      "seed": 11,
+      "demand_id": "89f1d359a13797fa015f35bbbb551ab48d8b00437988491ef1dafa4b9633e5ca",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 1077,
+      "exited_vehicles": 750,
+      "throughput_vph": 3000.0,
+      "total_delay_vehicle_s": 163344.66420637,
+      "boundary_delay_vehicle_s": 57419.16420636999,
+      "residual_queue_veh": 140,
+      "residual_external_veh": 187,
+      "queue_integral_vehicle_s": 163070.5,
+      "arrival_grid_correction_vehicle_s": 274.16420637001283,
+      "approaches": {
+        "N": {
+          "generated": 278,
+          "exited": 190,
+          "total_delay_vehicle_s": 42675.45762223,
+          "boundary_delay_vehicle_s": 15483.457622230004,
+          "mean_accrued_delay_s_per_arrival": 153.50884036773382,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 53,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 53
+        },
+        "S": {
+          "generated": 270,
+          "exited": 190,
+          "total_delay_vehicle_s": 37787.25869973,
+          "boundary_delay_vehicle_s": 12044.258699729997,
+          "mean_accrued_delay_s_per_arrival": 139.952809999,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 50,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 45
+        },
+        "E": {
+          "generated": 266,
+          "exited": 186,
+          "total_delay_vehicle_s": 42815.806822239996,
+          "boundary_delay_vehicle_s": 15359.306822239992,
+          "mean_accrued_delay_s_per_arrival": 160.96167978285712,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 49,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 45
+        },
+        "W": {
+          "generated": 263,
+          "exited": 184,
+          "total_delay_vehicle_s": 40066.14106217001,
+          "boundary_delay_vehicle_s": 14532.141062169996,
+          "mean_accrued_delay_s_per_arrival": 152.3427416812548,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 48,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 44
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 7.1869565217391305,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 6.163547894569666,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.2641430948419301,
+      "fallback_time_s": 5,
+      "service_imbalance_s": 21.008869783857108,
+      "conservation_passed": true
+    },
+    "heavy/adaptive_no_hysteresis": {
+      "scenario_id": "heavy",
+      "mode": "adaptive_no_hysteresis",
+      "seed": 11,
+      "demand_id": "89f1d359a13797fa015f35bbbb551ab48d8b00437988491ef1dafa4b9633e5ca",
+      "model_version": "signal-point-queue-1.0",
+      "controller_version": "bounded-queue-response-1.0",
+      "generated_vehicles": 1077,
+      "exited_vehicles": 743,
+      "throughput_vph": 2972.0,
+      "total_delay_vehicle_s": 171675.66420637,
+      "boundary_delay_vehicle_s": 62750.16420636999,
+      "residual_queue_veh": 140,
+      "residual_external_veh": 194,
+      "queue_integral_vehicle_s": 171401.5,
+      "arrival_grid_correction_vehicle_s": 274.16420637001283,
+      "approaches": {
+        "N": {
+          "generated": 278,
+          "exited": 185,
+          "total_delay_vehicle_s": 45031.45762223,
+          "boundary_delay_vehicle_s": 17115.957622230006,
+          "mean_accrued_delay_s_per_arrival": 161.98366051161872,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 60,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 58
+        },
+        "S": {
+          "generated": 270,
+          "exited": 185,
+          "total_delay_vehicle_s": 40143.25869973,
+          "boundary_delay_vehicle_s": 13685.258699729993,
+          "mean_accrued_delay_s_per_arrival": 148.67873592492595,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 55,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 50
+        },
+        "E": {
+          "generated": 266,
+          "exited": 187,
+          "total_delay_vehicle_s": 45058.806822239996,
+          "boundary_delay_vehicle_s": 16987.806822239996,
+          "mean_accrued_delay_s_per_arrival": 169.3940106099248,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 49,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 44
+        },
+        "W": {
+          "generated": 263,
+          "exited": 186,
+          "total_delay_vehicle_s": 41442.14106217001,
+          "boundary_delay_vehicle_s": 14961.141062169996,
+          "mean_accrued_delay_s_per_arrival": 157.5746808447529,
+          "max_queue_veh": 35,
+          "max_external_queue_veh": 44,
+          "residual_queue_veh": 35,
+          "residual_external_veh": 42
+        }
+      },
+      "forecast": {
+        "moving_average": {
+          "mae_veh": 7.541304347826087,
+          "sample_count": 460
+        },
+        "ema": {
+          "mae_veh": 6.407466685659991,
+          "sample_count": 460
+        }
+      },
+      "queue_estimate_mae_veh": 0.23544093178036607,
+      "fallback_time_s": 5,
+      "service_imbalance_s": 20.71527468499886,
+      "conservation_passed": true
+    }
+  },
+  "analytical_case": {
+    "expected_exits": 14,
+    "expected_delay_vehicle_s": 1650,
+    "passed": true
+  },
+  "time_step_sensitivity": {
+    "fixed": {
+      "total_delay_vehicle_s": {
+        "dt_0.5": 19145.55410904,
+        "dt_0.25": 19118.80410904
+      },
+      "exited_vehicles": {
+        "dt_0.5": 458,
+        "dt_0.25": 459
+      },
+      "residual_queue_veh": {
+        "dt_0.5": 43,
+        "dt_0.25": 42
+      }
+    },
+    "adaptive": {
+      "total_delay_vehicle_s": {
+        "dt_0.5": 6052.554109039999,
+        "dt_0.25": 6047.554109039999
+      },
+      "exited_vehicles": {
+        "dt_0.5": 496,
+        "dt_0.25": 496
+      },
+      "residual_queue_veh": {
+        "dt_0.5": 5,
+        "dt_0.25": 5
+      }
+    }
+  },
+  "tests_run": 11,
+  "passed": true
+}

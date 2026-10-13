@@ -1,0 +1,119 @@
+{
+  "dt_s": 0.5,
+  "duration_s": 900,
+  "frame_interval_s": 1,
+  "detector_interval_s": 5,
+  "storage_veh_per_approach": 35,
+  "saturation_headway_s": 2,
+  "startup_lost_s": 2,
+  "yellow_s": 3,
+  "all_red_s": 1,
+  "min_green_s": 10,
+  "max_green_s": 55,
+  "fixed_green_s": {
+    "NS": 30,
+    "EW": 30
+  },
+  "switch_threshold_veh": 3,
+  "stale_after_s": 12,
+  "forecast_horizon_s": 30,
+  "moving_average_intervals": 6,
+  "ema_alpha": 0.35,
+  "evaluation_start_s": 300,
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "scenarios": {
+    "balanced": {
+      "label": "Balanced demand",
+      "demand": [
+        {
+          "start_s": 0,
+          "rates_vph": {
+            "N": 450,
+            "S": 450,
+            "E": 450,
+            "W": 450
+          }
+        }
+      ]
+    },
+    "directional_shift": {
+      "label": "Directional demand shift",
+      "demand": [
+        {
+          "start_s": 0,
+          "rates_vph": {
+            "N": 450,
+            "S": 450,
+            "E": 450,
+            "W": 450
+          }
+        },
+        {
+          "start_s": 300,
+          "rates_vph": {
+            "N": 900,
+            "S": 900,
+            "E": 240,
+            "W": 240
+          }
+        }
+      ]
+    },
+    "detector_fault": {
+      "label": "Demand shift + detector faults",
+      "demand": [
+        {
+          "start_s": 0,
+          "rates_vph": {
+            "N": 450,
+            "S": 450,
+            "E": 450,
+            "W": 450
+          }
+        },
+        {
+          "start_s": 300,
+          "rates_vph": {
+            "N": 900,
+            "S": 900,
+            "E": 240,
+            "W": 240
+          }
+        }
+      ],
+      "faults": [
+        {
+          "approach": "N",
+          "start_s": 420,
+          "end_s": 540,
+          "kind": "missing"
+        },
+        {
+          "approach": "E",
+          "start_s": 600,
+          "end_s": 720,
+          "kind": "delay",
+          "delay_s": 20
+        }
+      ]
+    },
+    "heavy": {
+      "label": "Overload and finite storage",
+      "demand": [
+        {
+          "start_s": 0,
+          "rates_vph": {
+            "N": 1100,
+            "S": 1100,
+            "E": 1100,
+            "W": 1100
+          }
+        }
+      ]
+    }
+  }
+}

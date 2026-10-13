@@ -1,0 +1,52 @@
+{
+  "dt_s": 0.05,
+  "duration_s": 600,
+  "frame_interval_s": 1,
+  "lanes": 3,
+  "road_length_m": 1000,
+  "merge_position_m": 250,
+  "desired_speed_mps": 28,
+  "speed_variation_mps": 3,
+  "closed_lane": 0,
+  "merge_anticipation_m": 350,
+  "closure_start_m": 650,
+  "closure_end_m": 850,
+  "max_braking_mps2": 6,
+  "ramp_release_interval_s": 12,
+  "queue_speed_threshold_mps": 5,
+  "merge_headway_s": 0.8,
+  "lane_change_interval_s": 0.2,
+  "lane_change_cooldown_s": 5,
+  "lane_change_safe_braking_mps2": 3,
+  "lane_change_min_gap_m": 1.5,
+  "lane_change_threshold_mps2": 0.25,
+  "politeness": 0.2,
+  "keep_right_bias_mps2": 0.15,
+  "detectors_m": [
+    200,
+    550,
+    900
+  ],
+  "detector_interval_s": 30,
+  "demand": [
+    {
+      "start_s": 0,
+      "main_vph": 2700,
+      "ramp_vph": 300
+    },
+    {
+      "start_s": 240,
+      "main_vph": 4200,
+      "ramp_vph": 600
+    },
+    {
+      "start_s": 480,
+      "main_vph": 2400,
+      "ramp_vph": 300
+    }
+  ],
+  "cooperative_merge": true,
+  "yield_lookahead_m": 100,
+  "yield_braking_mps2": 2.0,
+  "yield_gap_buffer_m": 4
+}
