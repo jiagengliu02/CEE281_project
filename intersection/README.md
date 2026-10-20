@@ -42,7 +42,7 @@ Paths are relative to the project root. `run.py` is the only command-line entry 
 | `intersection/control.py` | Bounded phase state machine and three policies | `SignalController.update()` |
 | `intersection/run.py` | Paired experiments, export, and aggregation | `run_experiments()` |
 | `intersection/verify.py` | Independent count, analytic, timing, and causality checks | `audit()`, saturated-queue test |
-| `intersection/viewer_template.html` | Offline replay and plots | Controls and drawing functions |
+| `intersection/viewer_template.html.in` | Offline replay and plots | Controls and drawing functions |
 
 Data flow: demand events → road/external queues → entry and stop-line counts → queue estimate → control decision → green/yellow/all-red state → discharge. Future arrivals, true queues, and vehicle histories belong to the simulator/evaluation layer. The controller receives estimates and quality flags only.
 
@@ -126,4 +126,4 @@ The 11 test methods cover:
 
 Students must understand and verify the model, code, parameters, and conclusions and disclose AI assistance. This document does not invent names or individual contribution records.
 
-The current branch provides a runnable signal prototype, comparisons, and a design-choice ablation. Before course submission: check/integrate the instructor scaffold; add individual contribution records and pre-experiment predictions; update the design record in response to feedback; complete the video observation exercise and component-exchange evidence; complete shared freeway estimation, prediction, and adaptive TMC work; and supplement literature and independent validation as needed. This prototype is not completion of every course requirement.
+The current branch provides a runnable signal prototype, comparisons, and a design-choice ablation. Before course submission: check/integrate the instructor scaffold; add individual contribution records and pre-experiment predictions; update the design record in response to feedback; complete the video observation exercise and component-exchange evidence; review the implemented shared freeway estimation, prediction, and adaptive TMC evidence; and supplement literature and independent validation as needed. This prototype is not completion of every course requirement.

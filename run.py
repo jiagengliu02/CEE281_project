@@ -8,6 +8,7 @@ Examples:
 import argparse
 from importlib import import_module
 import json
+import shutil
 from pathlib import Path
 import sys
 
@@ -57,7 +58,12 @@ def main(argv=None):
         runner.run_experiments(config, output, args.scenario, args.seed)
     else:
         runner.run_experiments(config, output)
-    print('Viewer:', output / 'viewer.html')
+    viewer = output / 'viewer.html'
+    if output == (ROOT / 'results' / args.command).resolve():
+        published = ROOT / f'{args.command}.html'
+        shutil.copy2(viewer, published)
+        print('Project viewer:', published)
+    print('Viewer:', viewer)
     return 0
 
 

@@ -7,7 +7,7 @@ stay missing, and a late (out-of-order) report never rewinds the state.
 """
 from collections import deque
 
-from .detector import APPROACHES  # noqa: F401  (re-exported for callers)
+from .detector import APPROACHES
 
 
 class ObservationPipeline:

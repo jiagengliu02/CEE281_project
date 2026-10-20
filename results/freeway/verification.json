@@ -56,8 +56,99 @@
     },
     "guard_interventions": 0
   },
+  "adaptive_audit": {
+    "conservation": "passed every time step",
+    "same_lane_overlap": "none",
+    "negative_speed": "none",
+    "closed_lane_violation": "none",
+    "detector_counts_by_lane": {
+      "200_lane_0": 125,
+      "200_lane_1": 126,
+      "200_lane_2": 123,
+      "550_lane_0": 40,
+      "550_lane_1": 122,
+      "550_lane_2": 200,
+      "900_lane_0": 44,
+      "900_lane_1": 112,
+      "900_lane_2": 168
+    },
+    "guard_interventions": 0
+  },
+  "adaptive_fault_audit": {
+    "conservation": "passed every time step",
+    "same_lane_overlap": "none",
+    "negative_speed": "none",
+    "closed_lane_violation": "none",
+    "detector_counts_by_lane": {
+      "200_lane_0": 125,
+      "200_lane_1": 128,
+      "200_lane_2": 123,
+      "550_lane_0": 39,
+      "550_lane_1": 174,
+      "550_lane_2": 214,
+      "900_lane_0": 63,
+      "900_lane_1": 148,
+      "900_lane_2": 201
+    },
+    "guard_interventions": 0
+  },
+  "five_stage_loop": {
+    "tests": 8,
+    "passed": true
+  },
   "finite_demand_pulse_clears_through_construction": {
     "mode": "closure",
+    "model_version": "idm-freeway-2.0",
+    "controller_version": "forecast-inventory-meter-1.0",
+    "forecast": {
+      "moving_average": {
+        "main_arrivals": {
+          "samples": 16,
+          "mae_veh": 1.875
+        },
+        "main_entries": {
+          "samples": 16,
+          "mae_veh": 1.875
+        },
+        "ramp_arrivals": {
+          "samples": 16,
+          "mae_veh": 0.33333333333333337
+        },
+        "ramp_entries": {
+          "samples": 16,
+          "mae_veh": 0.33333333333333337
+        },
+        "exits": {
+          "samples": 16,
+          "mae_veh": 2.4791666666666665
+        }
+      },
+      "ema": {
+        "main_arrivals": {
+          "samples": 16,
+          "mae_veh": 2.6758517540147646
+        },
+        "main_entries": {
+          "samples": 16,
+          "mae_veh": 2.6758517540147646
+        },
+        "ramp_arrivals": {
+          "samples": 16,
+          "mae_veh": 0.44559621333730876
+        },
+        "ramp_entries": {
+          "samples": 16,
+          "mae_veh": 0.44559621333730876
+        },
+        "exits": {
+          "samples": 16,
+          "mae_veh": 2.989003181774304
+        }
+      }
+    },
+    "fallback_time_s": 0.0,
+    "road_estimate_mae_veh": 0.896049896049896,
+    "ramp_estimate_mae_veh": 0.0,
     "generated_vehicles": 70,
     "generated_main": 60,
     "generated_ramp": 10,
@@ -110,6 +201,57 @@
   "zero_demand_and_missing_measurements": "passed",
   "overload_boundary_accounting": {
     "mode": "closure",
+    "model_version": "idm-freeway-2.0",
+    "controller_version": "forecast-inventory-meter-1.0",
+    "forecast": {
+      "moving_average": {
+        "main_arrivals": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "main_entries": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "ramp_arrivals": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "ramp_entries": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "exits": {
+          "samples": 0,
+          "mae_veh": null
+        }
+      },
+      "ema": {
+        "main_arrivals": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "main_entries": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "ramp_arrivals": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "ramp_entries": {
+          "samples": 0,
+          "mae_veh": null
+        },
+        "exits": {
+          "samples": 0,
+          "mae_veh": null
+        }
+      }
+    },
+    "fallback_time_s": 0.0,
+    "road_estimate_mae_veh": 19.0,
+    "ramp_estimate_mae_veh": 6.0,
     "generated_vehicles": 440,
     "generated_main": 400,
     "generated_ramp": 40,

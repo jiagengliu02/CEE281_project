@@ -91,7 +91,7 @@ def run_experiments(config, output, selected=None, seeds=None):
 def write_viewer(output, payload):
     (output / 'data.json').write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
     data = json.dumps(payload, ensure_ascii=False).replace('<', '\\u003c')   # safe inside <script>
-    template = (ROOT / 'viewer_template.html').read_text(encoding='utf-8')
+    template = (ROOT / 'viewer_template.html.in').read_text(encoding='utf-8')
     (output / 'viewer.html').write_text(template.replace('__SIGNAL_DATA__', data), encoding='utf-8')
 
 

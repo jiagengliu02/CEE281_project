@@ -1,6 +1,6 @@
 # Freeway and Ramp Environment
 
-This branch owns the existing three-lane IDM model, ramp entry, work-zone merging, and detector outputs. It is the common freeway foundation; fixed metering is not yet an adaptive TMC.
+This branch owns the existing three-lane IDM model, ramp entry, work-zone merging, and detector outputs. It includes a five-stage forecast-assisted ramp TMC alongside fixed and unmetered baselines.
 
 Run from the project root:
 
@@ -10,7 +10,7 @@ python3 run.py check freeway
 open results/freeway/viewer.html
 ```
 
-The viewer has three modes: Open road, Closure with an unmetered ramp, and Closure with fixed ramp metering. Compare the two closure cases to isolate ramp-control effects. Use Play, the time slider, and Watch a merge to inspect motion. Charts include trajectories, queues, detector flow, and speed. The intersection uses a different queue model and is documented in `intersection/README.md`.
+The viewer has five modes: forecast-assisted metering, adaptive metering with detector faults, and the three original baselines: Open road, Closure with an unmetered ramp, and Closure with fixed ramp metering. Compare the two closure cases to isolate ramp-control effects. Use Play, the time slider, and Watch a merge to inspect motion. Charts include trajectories, queues, detector flow, and speed. The intersection uses a different queue model and is documented in `intersection/README.md`.
 
 ## Freeway environment
 
@@ -21,6 +21,8 @@ Three paired runs use identical arrivals, driver identities, desired speeds, and
 - `open`: no work zone; all three lanes open; ramp vehicles enter whenever the gap rules permit.
 - `closure`: left-lane closure; unmetered ramp.
 - `fixed`: the same closure; at least 12 seconds between successful ramp releases.
+- `adaptive`: the same closure; measured boundary counters and EMA forecasts set a 3–20 s release interval.
+- `adaptive_fault`: identical adaptive policy and demand, with missing reports at 300–360 s and 45 s delivery delays at 420–480 s (fault windows use interval end times).
 
 Vehicle identity is assigned at arrival, and desired speed follows from that identity. Differences in insertion order therefore do not change driver parameters.
 
@@ -81,7 +83,7 @@ A numerical guard is recorded if a motion update would overlap a leader or cross
 
 Watch a merge selects the next recorded work-zone merge and replays from 3 s before to 4 s after it at 1× speed. Yellow highlights the tracked vehicle; blue identifies yielding vehicles. Positions interpolate between snapshots; lateral interpolation does not affect physics.
 
-Plots and replay use simulator truth. The human-driver model sees neighboring vehicles and the closure. Fixed ramp control uses only the clock for release eligibility; insertion safety is enforced by the simulator. Future estimation modules should consume `observations.csv`, not complete vehicle trajectories.
+Road replay and traffic-performance plots use simulator truth. The new estimate plots distinguish measured estimates from truth. Human drivers see neighboring vehicles and the closure; ramp TMC receives only boundary detector reports. Fixed control uses the clock; adaptive control uses estimates and forecasts. Physical insertion safety is enforced after the meter issues a permit.
 
 ## Code and outputs
 
@@ -95,10 +97,10 @@ Paths below are relative to the project root. Run commands from that root.
 | `freeway/verify.py` | Independent physical checks and timestep sensitivity |
 | `freeway/configs/default.json` | Default road, ramp, work-zone, and demand settings |
 | `freeway/configs/heavy_demand.json` | Higher-demand configuration |
-| `freeway/viewer_template.html` | Offline replay and plots |
+| `freeway/viewer_template.html.in` | Offline replay and plots |
 | `results/freeway/` | Generated results; separate from source code |
 
-The output contains `open/`, `closure/`, and `fixed/` run folders, plus `data.json`, `viewer.html`, and `verification.json` after checks. Each run folder contains traces, observations, control logs, lane changes, yield logs, and metrics.
+The output contains `open/`, `closure/`, `fixed/`, `adaptive/`, and `adaptive_fault/` run folders, plus `data.json`, `viewer.html`, and `verification.json` after checks. Each run folder contains traces, observations, control logs, lane changes, yield logs, and metrics.
 
 Useful parameters include `merge_anticipation_m`, `closure_start_m`, `closure_end_m`, `lane_change_safe_braking_mps2`, `politeness`, and `demand`. The prototype supports a left-lane closure; changes to road layout or lane count also require corresponding viewer changes.
 
@@ -130,4 +132,30 @@ Reducing the timestep from 0.05 to 0.025 s changes closure exits from 385 to 387
 | Work-zone geometry, mandatory-merge priorities, demand, boundaries, and numerical values | Explicit, uncalibrated prototype assumptions |
 | Simulation, detectors, accounting, and visualization | Project implementation; no third-party source code copied |
 
-Codex assisted implementation, verification, English translation, and browser checks. Students must understand, verify, and extend the work and disclose their actual contributions. The original freeway still lacks state estimation, forecasting, and an adaptive TMC. The separate signal prototype implements these observation tasks and signal control within its own environment; see `intersection/README.md` for remaining course requirements.
+Codex assisted implementation, verification, English translation, and browser checks. Students must understand, verify, and extend the work and disclose their actual contributions. The freeway now includes boundary observation, conservation estimates, forecasts, adaptive ramp control and fault fallback. This is an uncalibrated teaching controller; video observations, component-exchange evidence, external validation, individual contributions and the final pathway requirements remain separate work.
+
+
+## Five-stage ramp loop
+
+1. **Detect** (`observation.py`, `BoundaryDetectors`): virtual event counters measure mainline demand arrivals, actual mainline entries, ramp demand arrivals, actual ramp entries and freeway exits. Reports are delivered every 30 s. Existing lane-specific crossing/speed detectors remain available in `observations.csv`. The boundary measurement bundle is in `boundary_observations.csv`; speed is explicitly unavailable there. Detector faults affect this bundle, not the independent loop-speed plots.
+2. **Estimate** (`RampObservation.estimate`): road inventory = measured mainline entries + ramp entries - exits; ramp queue = ramp arrivals - ramp entries; mainline boundary queue = mainline arrivals - mainline entries. Counts are cumulative and recover across missed reports. Estimates are held between reports and compared with withheld simulator truth. They assume empty initial conditions and complete boundary detection. Road inventory is not a count of slow vehicles.
+3. **Predict** (`RampObservation.forecast`): predict the next 30 s of each counter using EMA (alpha 0.35) and a 3-report moving-average baseline. Both use the same issue times and horizons. Forecast MAE is scored in vehicles from 120 s onward, only when the complete target horizon lies inside the simulation. Prediction truth is attached after the run. Missing/stale reports suppress forecasts. Old delayed reports never overwrite newer data.
+4. **Decide** (`control.py`): estimate the road inventory after one horizon without further ramp entries, `N0 = max(0, N_est + main_entry_forecast - exit_forecast)`. Request `r = (N_target - N0) / H` vehicles/s, bounded by intervals of 3–20 s. The fixed target is 45 vehicles. If the predicted ramp queue exceeds a soft 15-vehicle threshold, request faster service within the same bounds. These are declared teaching parameters, not calibrated capacities. This is a project-defined conservation rule, not ALINEA or an optimized MPC implementation.
+5. **Execute** (`model.py`, `control_ramp`): apply the interval since the last successful entry, then check the physical merge gap and IDM follower braking. A permit may remain unexecuted if no safe gap or no vehicle exists. Successful entry resets the meter clock. Once on the freeway, ramp vehicles follow the same IDM as mainline vehicles. The waiting ramp remains an unlimited FIFO point queue; its 15-vehicle control threshold is not physical storage.
+
+The signal pathway remains separate. Predictions here **actively affect** the meter. Healthy information drives the adaptive rule; unavailable, missing or older-than-45-s information triggers the 12-s fixed fallback. Startup also uses fallback. The full loop runs each simulation timestep, with sensor information changing only on delivery.
+
+### Outputs and verification
+
+- `boundary_observations.csv`: counts, cumulative counts, interval boundaries, delivery time and quality.
+- `estimates.csv`: causal road inventory and boundary queue estimates.
+- `forecasts.csv`: method, issue/target times, predicted counts, evaluation truth and absolute error.
+- `control_log.csv`: permit/hold command, interval, reason, estimates/forecasts used, fallback, actual release/hold response and last successful release.
+- `metrics.json`: total delay including all waits, residual queues, estimate MAE, matched forecast MAE, fallback duration, physical audits and version IDs.
+- The replay includes a five-stage trace, truth-versus-estimate plots, forecast comparison and meter interval history.
+
+Run `python3 run.py check freeway`. Checks include independent trajectory/detector audits for all five modes, analytic estimator accounting, fault recovery, delivery causality, forecast-to-action sensitivity, queue relief and bounds, actual release spacing, equal-horizon forecast scoring, zero demand and future-demand noninterference. The default demand shift is built in. A separate stress run is `python3 run.py freeway --config freeway/configs/heavy_demand.json --output results/freeway_heavy`.
+
+This first controller can perform worse than fixed metering. Inventory predictions extrapolate past measured rates and can react poorly to bottleneck changes; queue relief may trade mainline congestion for ramp waiting. Preserve negative results and evaluate parameter choices on separate development scenarios before claiming improvement. See `results/freeway/experiment_report.md` for the measured comparison.
+
+Design reference: [FHWA Ramp Management and Control Handbook, Chapter 5](https://ops.fhwa.dot.gov/publications/ramp_mgmt_handbook/manual/manual/5_1.htm), for traffic-responsive metering and ramp queue management concepts. The equations above are explicitly project-defined. No external controller source code was copied.

@@ -1,5 +1,56 @@
 {
   "mode": "open",
+  "model_version": "idm-freeway-2.0",
+  "controller_version": "forecast-inventory-meter-1.0",
+  "forecast": {
+    "moving_average": {
+      "main_arrivals": {
+        "samples": 16,
+        "mae_veh": 2.5
+      },
+      "main_entries": {
+        "samples": 16,
+        "mae_veh": 2.5
+      },
+      "ramp_arrivals": {
+        "samples": 16,
+        "mae_veh": 0.7083333333333331
+      },
+      "ramp_entries": {
+        "samples": 16,
+        "mae_veh": 0.625
+      },
+      "exits": {
+        "samples": 16,
+        "mae_veh": 3.458333333333334
+      }
+    },
+    "ema": {
+      "main_arrivals": {
+        "samples": 16,
+        "mae_veh": 3.149022850866036
+      },
+      "main_entries": {
+        "samples": 16,
+        "mae_veh": 3.149022850866036
+      },
+      "ramp_arrivals": {
+        "samples": 16,
+        "mae_veh": 0.6682982953008885
+      },
+      "ramp_entries": {
+        "samples": 16,
+        "mae_veh": 0.6253772913948834
+      },
+      "exits": {
+        "samples": 16,
+        "mae_veh": 4.317171899413386
+      }
+    }
+  },
+  "fallback_time_s": 0.0,
+  "road_estimate_mae_veh": 1.7817047817047817,
+  "ramp_estimate_mae_veh": 0.15176715176715178,
   "generated_vehicles": 440,
   "generated_main": 380,
   "generated_ramp": 60,

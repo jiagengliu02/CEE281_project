@@ -3,8 +3,12 @@
 Each time step runs, in order:
     arrivals -> road entry -> ramp control -> lane changes
     -> longitudinal update -> detectors and metrics.
-Modes: 'open' (no closure), 'closure' (no metering), 'fixed' (closure + fixed ramp metering).
+Modes: open, closure, fixed, adaptive, adaptive_fault.
+Boundary reports -> estimates -> forecasts -> metering -> IDM motion -> evaluation.
 """
+from .observation import BoundaryDetectors, RampObservation, CHANNELS
+from .control import RampController
+
 from dataclasses import dataclass
 import math
 
@@ -54,7 +58,16 @@ class FreewaySimulation:
         self.queues['ramp'] = []
         self.credit = {'main': 0.0, 'ramp': 0.0}       # fractional arrivals carried over
         self.arrivals = {'main': 0, 'ramp': 0}
-        self.next_release = 0.0                         # earliest metered ramp release
+        if mode not in ('open', 'closure', 'fixed', 'adaptive', 'adaptive_fault'):
+            raise ValueError('Unknown freeway mode')
+        faults = config['tmc']['faults'] if mode == 'adaptive_fault' else ()
+        self.boundary_detectors = BoundaryDetectors(config['detector_interval_s'], faults)
+        self.pipeline = RampObservation(config['tmc'])
+        self.controller = RampController(config['tmc'], mode, config['ramp_release_interval_s'])
+        self.estimates_log, self.forecasts_log = [], []
+        self.counter_history = {}
+        self.last_command = None
+        self.fallback_time = 0.0
         self.requests = {}                              # {yielding_id: merging_vehicle}
         self.owed_passage = set()                       # cars that already yielded once
         self.detectors = {(p, lane): DetectorBin()
@@ -82,7 +95,9 @@ class FreewaySimulation:
     def run(self):
         self.snapshot(0)
         for step in range(round(self.c['duration_s'] / self.dt)):
-            t = step * self.dt
+            t = round(step * self.dt, 8)
+            self.counter_history[t] = self.boundary_detectors.counts.copy()
+            self.observe(t)
             self.generate_arrivals(t)
             for lane in range(self.lanes):
                 self.try_enter('main', lane, t)
@@ -96,9 +111,11 @@ class FreewaySimulation:
             self.apply_updates(updates, t)
             self.check_invariants()
             if (step + 1) % self.detector_steps == 0:
-                self.report_detectors(t + self.dt)
+                self.report_detectors(round(t + self.dt, 8))
+                self.boundary_detectors.report(round(t + self.dt, 8))
             if (step + 1) % self.sample_steps == 0:
                 self.snapshot(t + self.dt)
+        self.counter_history[self.c['duration_s']] = self.boundary_detectors.counts.copy()
         return self.result()
 
     # ------------------------------------------------------------ demand and entry
@@ -116,6 +133,7 @@ class FreewaySimulation:
                     queue = 'ramp'
                 self.queues[queue].append((t, vehicle_id))
                 self.arrivals[origin] += 1
+                self.boundary_detectors.cross(origin + '_arrivals')
                 self.credit[origin] -= 1
 
     def try_enter(self, origin, lane, t):
@@ -144,26 +162,46 @@ class FreewaySimulation:
                 return False
 
         queue.pop(0)
+        self.boundary_detectors.cross(origin + '_entries')
         self.vehicles.append(Vehicle(vehicle_id, origin, born, t, x, speed, lane,
                                      desired_speed=desired, previous_lane=lane))
         return True
 
+    def observe(self, t):
+        """Consume delivered reports; forecasts use historical measured rates only."""
+        changed = False
+        for row in self.boundary_detectors.deliver(t):
+            changed = self.pipeline.receive(row, t) or changed
+        if changed:
+            for method in ('moving_average', 'ema'):
+                prediction = self.pipeline.forecast(t, method)
+                if prediction:
+                    for channel, value in prediction['counts'].items():
+                        self.forecasts_log.append({'issue_time_s': t,
+                            'target_time_s': prediction['target_time_s'],
+                            'segment_id': channel, 'variable_name': 'interval_crossings',
+                            'method': method, 'predicted_value': value, 'units': 'veh',
+                            'quality_flag': 'ok'})
+
     def control_ramp(self, step, t):
-        """Ramp entry; in 'fixed' mode releases are at least ramp_release_interval_s apart."""
-        eligible = self.mode != 'fixed' or t >= self.next_release - 1e-9
+        """Meter eligibility then safe insertion; the command never sees true queues."""
+        estimate = self.pipeline.estimate(t)
+        prediction = self.pipeline.forecast(t)
+        command = self.controller.decide(t, estimate, prediction)
+        eligible = command['action'] == 'permit'
         released = eligible and self.try_enter('ramp', self.lanes - 1, t)
         if released:
-            self.next_release = t + self.c['ramp_release_interval_s']
+            self.controller.executed(t)
+        command.update(executed_action='release' if released else 'hold',
+                       execution_reason=('safe_gap_release' if released else
+                                         'no_safe_gap_or_no_demand' if eligible else 'meter_wait'),
+                       scenario=self.mode, last_release_s=self.controller.last_release)
+        self.last_command = command
+        self.fallback_time += self.dt if command['fallback'] else 0
         if step % self.sample_steps == 0 or released:
-            if released:
-                reason = 'safe_gap_release'
-            elif eligible:
-                reason = 'no_safe_gap_or_no_demand'
-            else:
-                reason = 'meter_wait'
-            self.control_log.append({'issue_time_s': round(t, 3), 'actuator_id': 'ramp',
-                'action': 'release' if released else 'hold',
-                'waiting_vehicles': len(self.queues['ramp']), 'reason': reason, 'scenario': self.mode})
+            self.control_log.append(command.copy())
+        if step % self.sample_steps == 0:
+            self.estimates_log.append(estimate)
 
     # ------------------------------------------------------------ lane changes
 
@@ -267,6 +305,9 @@ class FreewaySimulation:
                 'speed_mps': round(new_v, 4), 'acceleration_mps2': round(accel, 4)})
             car.x, car.v, car.a = new_x, new_v, accel
             self.min_accel = min(self.min_accel, accel)
+        for car in self.vehicles:
+            if car.x >= road_length:
+                self.boundary_detectors.cross('exits')
         self.exits += sum(c.x >= road_length for c in self.vehicles)
         self.vehicles = [c for c in self.vehicles if c.x < road_length]
         self.max_main = max(self.max_main, self.main_waiting())
@@ -299,7 +340,9 @@ class FreewaySimulation:
             'road_queue': self.slow_vehicles(),
             'exits': self.exits, 'lane_changes': len(self.lane_changes),
             'mandatory_merges': self.mandatory_merges(),
-            'yielding_vehicles': len(self.requests)})
+            'yielding_vehicles': len(self.requests),
+            'estimate': self.pipeline.estimate(t),
+            'control': self.last_command.copy() if self.last_command else None})
 
     def main_waiting(self):
         return sum(len(self.queues[f'main_{i}']) for i in range(self.lanes))
@@ -311,8 +354,35 @@ class FreewaySimulation:
         return sum(r['reason'] == 'closure_merge' for r in self.lane_changes)
 
     def result(self):
+        # Evaluation-only truth: never supplied to the observation/controller modules.
+        for row in self.forecasts_log:
+            start = self.counter_history[round(row['issue_time_s'], 8)]
+            end = self.counter_history.get(round(row['target_time_s'], 8))
+            row['evaluation_period'] = (row['issue_time_s'] >= self.c['tmc']['evaluation_start_s']
+                                        and end is not None)
+            row['actual_value'] = end[row['segment_id']] - start[row['segment_id']] if end else None
+            row['absolute_error'] = (abs(row['predicted_value'] - row['actual_value'])
+                                     if end else None)
+        scores = {}
+        for method in ('moving_average', 'ema'):
+            scores[method] = {}
+            for channel in CHANNELS:
+                rows = [r for r in self.forecasts_log if r['method'] == method
+                        and r['segment_id'] == channel and r['evaluation_period']]
+                scores[method][channel] = {'samples': len(rows),
+                    'mae_veh': sum(r['absolute_error'] for r in rows) / len(rows) if rows else None}
+        evaluated = [f for f in self.frames if f['time'] >= self.c['tmc']['evaluation_start_s']
+                     and f['estimate']['road_vehicles'] is not None]
         metrics = {
             'mode': self.mode,
+            'model_version': 'idm-freeway-2.0',
+            'controller_version': 'forecast-inventory-meter-1.0',
+            'forecast': scores,
+            'fallback_time_s': round(self.fallback_time, 3),
+            'road_estimate_mae_veh': (sum(abs(f['estimate']['road_vehicles'] - len(f['vehicles']))
+                for f in evaluated) / len(evaluated) if evaluated else None),
+            'ramp_estimate_mae_veh': (sum(abs(f['estimate']['ramp_queue'] - f['ramp_queue'])
+                for f in evaluated) / len(evaluated) if evaluated else None),
             'generated_vehicles': sum(self.arrivals.values()),
             'generated_main': self.arrivals['main'],
             'generated_ramp': self.arrivals['ramp'],
@@ -337,7 +407,9 @@ class FreewaySimulation:
         }
         return {'metrics': metrics, 'frames': self.frames, 'observations': self.observations,
                 'traces': self.traces, 'control_log': self.control_log,
-                'lane_changes': self.lane_changes, 'yield_log': self.yield_log}
+                'lane_changes': self.lane_changes, 'yield_log': self.yield_log,
+                'boundary_observations': self.boundary_detectors.records,
+                'estimates': self.estimates_log, 'forecasts': self.forecasts_log}
 
 
 def simulate(config, mode='closure'):
@@ -359,3 +431,22 @@ def validate(c):
         raise ValueError('Require ramp < merge anticipation < closure start < closure end < road end')
     if c['closed_lane'] != 0:
         raise ValueError('This prototype implements leftmost-lane closure only')
+
+    tmc = c['tmc']
+    for key in ('forecast_horizon_s', 'stale_after_s', 'target_road_vehicles',
+                'min_release_interval_s', 'max_release_interval_s', 'ramp_queue_threshold_veh'):
+        if not math.isfinite(tmc[key]) or tmc[key] <= 0:
+            raise ValueError('TMC parameter must be finite and positive: ' + key)
+    if not 0 < tmc['ema_alpha'] <= 1 or not isinstance(tmc['moving_average_intervals'], int) or tmc['moving_average_intervals'] < 1:
+        raise ValueError('Invalid forecasting parameters')
+    if not tmc['min_release_interval_s'] <= c['ramp_release_interval_s'] <= tmc['max_release_interval_s']:
+        raise ValueError('Fallback interval must be within meter bounds')
+    ratio = tmc['forecast_horizon_s'] / c['dt_s']
+    if abs(ratio - round(ratio)) > 1e-6:
+        raise ValueError('Forecast horizon must align with simulation steps')
+    for fault in tmc['faults']:
+        if fault['kind'] not in ('missing', 'delay') or not 0 <= fault['start_s'] < fault['end_s']:
+            raise ValueError('Invalid observation fault')
+        delay = fault.get('delay_s', 0)
+        if delay < 0 or abs(delay / c['dt_s'] - round(delay / c['dt_s'])) > 1e-6:
+            raise ValueError('Detector delay must align with simulation steps')

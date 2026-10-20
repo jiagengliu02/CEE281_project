@@ -48,5 +48,29 @@
   "cooperative_merge": true,
   "yield_lookahead_m": 100,
   "yield_braking_mps2": 2.0,
-  "yield_gap_buffer_m": 4
+  "yield_gap_buffer_m": 4,
+  "tmc": {
+    "forecast_horizon_s": 30,
+    "moving_average_intervals": 3,
+    "ema_alpha": 0.35,
+    "stale_after_s": 45,
+    "target_road_vehicles": 45,
+    "min_release_interval_s": 3,
+    "max_release_interval_s": 20,
+    "ramp_queue_threshold_veh": 15,
+    "evaluation_start_s": 120,
+    "faults": [
+      {
+        "start_s": 300,
+        "end_s": 360,
+        "kind": "missing"
+      },
+      {
+        "start_s": 420,
+        "end_s": 480,
+        "kind": "delay",
+        "delay_s": 45
+      }
+    ]
+  }
 }

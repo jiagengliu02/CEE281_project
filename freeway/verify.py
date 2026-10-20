@@ -6,6 +6,7 @@ import json
 from .behavior import (VEHICLE_LENGTH_M, Vehicle, courtesy_requests, idm_acceleration,
                        lane_change_candidate, motion)
 from .model import simulate
+from .test_tmc import verify_tmc
 
 ROOT = Path(__file__).resolve().parent
 
@@ -137,9 +138,10 @@ def verify():
         'courtesy_request_and_yielding_vehicle_turn': check_courtesy(config),
     }
     runs = {}
-    for mode in ['open', 'closure', 'fixed']:
+    for mode in ['open', 'closure', 'fixed', 'adaptive', 'adaptive_fault']:
         runs[mode] = simulate(config, mode)
         report[mode + '_audit'] = audit_run(config, mode, runs[mode])
+    report['five_stage_loop'] = verify_tmc()
     report['finite_demand_pulse_clears_through_construction'] = check_pulse_clears(config)
     report['closure_time_step_sensitivity'] = check_time_step(config, runs['closure'])
     report['time_step_note'] = 'Lane/gap event timing is discrete; sensitivity is reported, not forced to match.'
