@@ -87,7 +87,7 @@ def write_report(output, payload):
               '', 'The initial adaptive rule is not guaranteed to outperform fixed control. Inventory extrapolation, '
               'queue-relief overrides and merge timing can produce adverse feedback. '
               'A fault run performing better is not evidence that missing data are beneficial: fallback changes the timing policy.',
-              '', 'Ramp waits use an unlimited FIFO point queue; IDM applies after road entry. '
+              '', 'Ramp vehicles use IDM along a finite ramp with unlimited upstream FIFO storage. '
               'The queue threshold is soft, all residual queues and their accrued waiting are included. '
               'No physical ramp-storage or spatial spillback claim is made.',
               '', 'Parameters were declared for a teaching prototype. This is neither empirical validation nor '

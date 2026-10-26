@@ -72,5 +72,14 @@
         "delay_s": 45
       }
     ]
-  }
+  },
+  "taper_start_m": 500,
+  "lane_width_m": 3.6,
+  "vehicle_width_m": 1.8,
+  "taper_clearance_m": 0.2,
+  "merge_urgency_gain_mps2": 2.0,
+  "mandatory_merge_urgency": 0.8,
+  "courtesy_start_urgency": 0.35,
+  "ramp_length_m": 200,
+  "ramp_desired_speed_mps": 12
 }

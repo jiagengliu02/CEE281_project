@@ -8,12 +8,13 @@ Boundary reports -> estimates -> forecasts -> metering -> IDM motion -> evaluati
 """
 from .observation import BoundaryDetectors, RampObservation, CHANNELS
 from .control import RampController
+from .ramp import RampRoad
 
 from dataclasses import dataclass
 import math
 
 from .behavior import (VEHICLE_LENGTH_M, Vehicle, blocked, courtesy_requests, idm_acceleration, in_merge_zone,
-                       lane_change_candidate, lane_neighbors, motion, raw_acceleration)
+                       lane_change_candidate, lane_neighbors, motion, raw_acceleration, lane_end, merge_urgency)
 
 ENTRY_MIN_GAP_M = 2            # standstill gap required when a vehicle enters the road
 ENTRY_CLOSING_FACTOR_S = 2     # extra entry gap per m/s the follower is faster than the new car
@@ -56,6 +57,7 @@ class FreewaySimulation:
         self.vehicles = []
         self.queues = {f'main_{i}': [] for i in range(self.lanes)}   # boundary queues
         self.queues['ramp'] = []
+        self.ramp = RampRoad(config)
         self.credit = {'main': 0.0, 'ramp': 0.0}       # fractional arrivals carried over
         self.arrivals = {'main': 0, 'ramp': 0}
         if mode not in ('open', 'closure', 'fixed', 'adaptive', 'adaptive_fault'):
@@ -101,7 +103,9 @@ class FreewaySimulation:
             self.generate_arrivals(t)
             for lane in range(self.lanes):
                 self.try_enter('main', lane, t)
+            self.ramp.admit(self.queues['ramp'], t)
             self.control_ramp(step, t)
+            self.ramp.advance(self.dt)
             if step % self.lane_change_steps == 0:
                 self.change_lanes(t)
             self.owed_passage.intersection_update(
@@ -144,8 +148,12 @@ class FreewaySimulation:
         x = 0.0 if origin == 'main' else self.c['merge_position_m']
         lead, follow = lane_neighbors(self.vehicles, lane, x)
         born, vehicle_id = queue[0]
+        if origin == 'ramp' and not self.ramp.ready(vehicle_id):
+            return False
         desired = preferred_speed(self.c, vehicle_id)
         speed = min(desired, lead.v if lead else desired)
+        # Restore the original mainline handoff speed; ramp crawl speed
+        # does not cap the vehicle after it joins the freeway.
         headway = self.c['merge_headway_s']
 
         if lead and lead.x - lead.length - x < ENTRY_MIN_GAP_M + headway * speed:
@@ -162,9 +170,12 @@ class FreewaySimulation:
                 return False
 
         queue.pop(0)
+        if origin == 'ramp':
+            self.ramp.remove_front()
         self.boundary_detectors.cross(origin + '_entries')
         self.vehicles.append(Vehicle(vehicle_id, origin, born, t, x, speed, lane,
-                                     desired_speed=desired, previous_lane=lane))
+                                     desired_speed=desired, previous_lane=lane, entry_speed=speed,
+                                     lane_change_time=t if origin == 'ramp' else -100.0))
         return True
 
     def observe(self, t):
@@ -214,6 +225,8 @@ class FreewaySimulation:
         priority = sorted(self.vehicles, key=lambda c: (
             not in_merge_zone(c, self.c, self.closure), -c.x, c.id))
         for car in priority:
+            if car.origin == 'ramp' and car.x < self.c['merge_position_m'] + 45:
+                continue
             if t - car.lane_change_time < self.c['lane_change_cooldown_s']:
                 continue
             mandatory = in_merge_zone(car, self.c, self.closure)
@@ -266,7 +279,10 @@ class FreewaySimulation:
         yield_a = idm_acceleration(car.v, merger.x - merger.length - car.x,
             car.v - merger.v, car.desired_speed, car.headway,
             car.min_gap + self.c['yield_gap_buffer_m'], car.max_accel, car.comfortable_braking)
-        applied = min(accel, max(-self.c['yield_braking_mps2'], yield_a))
+        strength = 1.0
+        if self.c.get('taper_start_m') is not None:
+            strength = merge_urgency(merger, self.c, self.closure)
+        applied = min(accel, max(-self.c['yield_braking_mps2'] * strength, yield_a))
         if step % self.sample_steps == 0:
             self.yield_log.append({'time_s': round(t, 3), 'yielding_vehicle_id': car.id,
                 'merging_vehicle_id': merger.id, 'position_m': round(car.x, 4),
@@ -277,8 +293,8 @@ class FreewaySimulation:
     def guard(self, car, lead, lane, new_x, new_v, updates):
         """Counted numerical guard: never pass the leader's new rear or the lane end."""
         ceiling = updates[lead.id][0] - lead.length - GUARD_CLEARANCE_M if lead else float('inf')
-        if self.closure and lane == self.c['closed_lane'] and car.x < self.c['closure_start_m']:
-            ceiling = min(ceiling, self.c['closure_start_m'] - GUARD_CLEARANCE_M)
+        if self.closure and lane == self.c['closed_lane'] and car.x < lane_end(self.c):
+            ceiling = min(ceiling, lane_end(self.c) - GUARD_CLEARANCE_M)
         if new_x > ceiling:
             if ceiling < car.x:
                 raise AssertionError('Existing overlap cannot be repaired by a guard')
@@ -317,6 +333,8 @@ class FreewaySimulation:
     def check_invariants(self):
         in_system = len(self.vehicles) + self.main_waiting() + len(self.queues['ramp'])
         assert sum(self.arrivals.values()) == self.exits + in_system, 'Conservation failure'
+        assert {c.id for c in self.ramp.cars}.issubset({vid for _,vid in self.queues['ramp']})
+        assert not ({c.id for c in self.ramp.cars} & {c.id for c in self.vehicles})
         assert all(c.v >= 0 for c in self.vehicles), 'Negative speed'
 
     # ------------------------------------------------------------ outputs
@@ -335,8 +353,10 @@ class FreewaySimulation:
         """One replay frame for the HTML viewer."""
         self.frames.append({'time': round(t, 3), 'vehicles': [
             [c.id, round(c.x, 3), round(c.v, 3), c.origin, c.lane,
-             c.previous_lane, round(c.lane_change_time, 3), c.id in self.requests] for c in self.vehicles],
+             c.previous_lane, round(c.lane_change_time, 3), c.id in self.requests, c.entered, c.entry_speed] for c in self.vehicles],
             'main_queue': self.main_waiting(), 'ramp_queue': len(self.queues['ramp']),
+            'ramp_vehicles': self.ramp.snapshot(),
+            'ramp_upstream': len(self.queues['ramp'])-len(self.ramp.cars),
             'road_queue': self.slow_vehicles(),
             'exits': self.exits, 'lane_changes': len(self.lane_changes),
             'mandatory_merges': self.mandatory_merges(),
@@ -375,7 +395,7 @@ class FreewaySimulation:
                      and f['estimate']['road_vehicles'] is not None]
         metrics = {
             'mode': self.mode,
-            'model_version': 'idm-freeway-2.0',
+            'model_version': 'idm-freeway-ramp-motion-3.1' if self.c.get('taper_start_m') is not None else 'idm-freeway-2.0',
             'controller_version': 'forecast-inventory-meter-1.0',
             'forecast': scores,
             'fallback_time_s': round(self.fallback_time, 3),
@@ -395,10 +415,12 @@ class FreewaySimulation:
             'max_road_queue': self.max_road,
             'throughput_vph': self.exits * 3600 / self.c['duration_s'],
             'total_time_in_system_vehicle_s': round(self.total_time, 2),
-            'total_delay_vehicle_s': round(self.total_time - self.free_time, 2),
+            'total_delay_vehicle_s': round(self.total_time - self.free_time - self.ramp.distance/self.ramp.speed, 2),
             'minimum_gap_m': round(self.min_gap, 4) if self.min_gap != float('inf') else None,
             'strongest_braking_mps2': round(self.min_accel, 4),
             'safety_interventions': self.guards,
+            'ramp_minimum_gap_m': round(self.ramp.minimum_gap,4) if self.ramp.minimum_gap != float('inf') else None,
+            'ramp_distance_m': round(self.ramp.distance,4),
             'yield_records': len(self.yield_log),
             'lane_changes': len(self.lane_changes),
             'mandatory_merges': self.mandatory_merges(),
@@ -432,6 +454,22 @@ def validate(c):
     if c['closed_lane'] != 0:
         raise ValueError('This prototype implements leftmost-lane closure only')
 
+    if c.get('taper_start_m') is not None:
+        if not c['merge_anticipation_m'] <= c['taper_start_m'] < c['closure_start_m']:
+            raise ValueError('Require merge anticipation <= taper start < closure start')
+        for key in ('lane_width_m', 'vehicle_width_m', 'taper_clearance_m', 'merge_urgency_gain_mps2'):
+            if not math.isfinite(c[key]) or c[key] <= 0:
+                raise ValueError('Taper parameter must be finite and positive: ' + key)
+        if c['vehicle_width_m'] + 2 * c['taper_clearance_m'] >= c['lane_width_m']:
+            raise ValueError('Vehicle and side margins must fit in a full lane')
+        if not 0 <= c['courtesy_start_urgency'] < c['mandatory_merge_urgency'] <= 1:
+            raise ValueError('Invalid taper urgency thresholds')
+
+    for key,default in [('ramp_length_m',200),('ramp_desired_speed_mps',12)]:
+        if not math.isfinite(c.get(key,default)) or c.get(key,default) <= 0:
+            raise ValueError('Ramp parameter must be finite and positive: '+key)
+    if c.get('ramp_length_m',200) < 10:
+        raise ValueError('Ramp must be at least 10 m long')
     tmc = c['tmc']
     for key in ('forecast_horizon_s', 'stale_after_s', 'target_road_vehicles',
                 'min_release_interval_s', 'max_release_interval_s', 'ramp_queue_threshold_veh'):

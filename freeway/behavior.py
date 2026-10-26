@@ -30,6 +30,7 @@ class Vehicle:
     comfortable_braking: float = 2.0   # IDM b
     previous_lane: int = -1
     lane_change_time: float = -100.0
+    entry_speed: float = 0.0
 
 
 # ---------------------------------------------------------------- car following
@@ -57,12 +58,12 @@ def raw_acceleration(car, lead, lane, config, closure):
     """Unclipped IDM acceleration of `car` in `lane` behind `lead`.
 
     Before the closure, the closed lane ends in a standing obstacle at
-    closure_start_m (a physical lane end, not a lower speed limit).
+    the usable taper end (a physical lane end, not a lower speed limit).
     """
     gap = lead.x - lead.length - car.x if lead else FREE_ROAD_GAP_M
     lead_v = lead.v if lead else car.v
-    if closure and lane == config['closed_lane'] and car.x < config['closure_start_m']:
-        obstacle_gap = config['closure_start_m'] - car.x
+    if closure and lane == config['closed_lane'] and car.x < lane_end(config):
+        obstacle_gap = lane_end(config) - car.x
         if obstacle_gap < gap:
             gap, lead_v = obstacle_gap, 0.0
     return idm_acceleration(car.v, gap, car.v - lead_v, car.desired_speed,
@@ -80,16 +81,37 @@ def lane_neighbors(vehicles, lane, x, exclude=None):
             max(behind, key=lambda c: c.x) if behind else None)
 
 
+def lane_end(config):
+    """Conservative lane end where the taper cannot fit a car plus side margins.
+
+    Lane membership stays discrete; lateral placement is display-only.
+    Old configurations without a taper keep their original lane end.
+    """
+    start = config.get('taper_start_m')
+    if start is None:
+        return config['closure_start_m']
+    required = config['vehicle_width_m'] + 2 * config['taper_clearance_m']
+    return start + (config['closure_start_m'] - start) * (1 - required / config['lane_width_m'])
+
+
+def merge_urgency(car, config, closure):
+    """Distance-based urgency, from zero at anticipation to one at usable end."""
+    if not closure or car.lane != config['closed_lane']:
+        return 0.0
+    return max(0.0, min(1.0, (car.x - config['merge_anticipation_m']) /
+                       (lane_end(config) - config['merge_anticipation_m'])))
+
+
 def blocked(config, lane, x, enabled=True):
     """True if position x in `lane` is inside the work zone."""
     return (enabled and lane == config['closed_lane']
-            and config['closure_start_m'] <= x < config['closure_end_m'] + CLOSURE_EXIT_BUFFER_M)
+            and lane_end(config) <= x < config['closure_end_m'] + CLOSURE_EXIT_BUFFER_M)
 
 
 def in_merge_zone(car, config, closure):
-    """True if the car is in the closing lane and must merge right now."""
+    """True if the car is in the closing lane and should seek a merge."""
     return (closure and car.lane == config['closed_lane']
-            and config['merge_anticipation_m'] <= car.x < config['closure_start_m'])
+            and config['merge_anticipation_m'] <= car.x < lane_end(config))
 
 
 def avoids_closing_lane(car, target, config, closure):
@@ -137,6 +159,10 @@ def lane_change_candidate(car, target, vehicles, config, closure, mandatory=Fals
         old_follow_after - old_follow_before + new_follow_after - new_follow_before)
     incentive += config['keep_right_bias_mps2'] * (1 if target > car.lane else -1)
 
+    urgency = merge_urgency(car, config, closure) if mandatory else 0.0
+    if config.get('taper_start_m') is not None and mandatory:
+        incentive += config['merge_urgency_gain_mps2'] * urgency ** 2
+        mandatory = urgency >= config['mandatory_merge_urgency']
     if mandatory or incentive > config['lane_change_threshold_mps2']:
         return {'score': incentive, 'self_after': self_after, 'follower_after': new_follow_after}
     return None
@@ -156,7 +182,14 @@ def courtesy_requests(vehicles, config, closure, owed_passage=None):
     if not merging:
         return {}
     car = merging[0]
+    if config.get('taper_start_m') is not None and merge_urgency(car, config, closure) < config['courtesy_start_urgency']:
+        return {}
     _, follower = lane_neighbors(vehicles, car.lane + 1, car.x)
+    if (config.get('taper_start_m') is not None and follower
+            and car.x - follower.x < car.length + config['lane_change_min_gap_m']):
+        # A stopped merger cannot create rear clearance by moving forward at
+        # the taper end. Let this overlapping follower pass and ask the next.
+        return {}
     if (follower and follower.id not in (owed_passage or set())
             and car.x - follower.x <= config['yield_lookahead_m']):
         return {follower.id: car}

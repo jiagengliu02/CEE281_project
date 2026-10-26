@@ -1,6 +1,6 @@
 {
   "mode": "fixed",
-  "model_version": "idm-freeway-2.0",
+  "model_version": "idm-freeway-ramp-motion-3.1",
   "controller_version": "forecast-inventory-meter-1.0",
   "forecast": {
     "moving_average": {
@@ -18,11 +18,11 @@
       },
       "ramp_entries": {
         "samples": 16,
-        "mae_veh": 0.5416666666666666
+        "mae_veh": 0.5416666666666669
       },
       "exits": {
         "samples": 16,
-        "mae_veh": 4.1875
+        "mae_veh": 1.5625000000000009
       }
     },
     "ema": {
@@ -40,36 +40,38 @@
       },
       "ramp_entries": {
         "samples": 16,
-        "mae_veh": 0.5380444296433097
+        "mae_veh": 0.5395238315617956
       },
       "exits": {
         "samples": 16,
-        "mae_veh": 4.917557854712333
+        "mae_veh": 2.008573203950349
       }
     }
   },
   "fallback_time_s": 0.0,
-  "road_estimate_mae_veh": 1.864864864864865,
-  "ramp_estimate_mae_veh": 0.4656964656964657,
+  "road_estimate_mae_veh": 2.41995841995842,
+  "ramp_estimate_mae_veh": 0.5405405405405406,
   "generated_vehicles": 440,
   "generated_main": 380,
   "generated_ramp": 60,
-  "exited_vehicles": 371,
-  "remaining_on_road": 57,
+  "exited_vehicles": 367,
+  "remaining_on_road": 58,
   "remaining_main_queue": 0,
-  "remaining_ramp_queue": 12,
+  "remaining_ramp_queue": 15,
   "max_main_queue": 0,
-  "max_ramp_queue": 12,
-  "max_road_queue": 38,
-  "throughput_vph": 2226.0,
-  "total_time_in_system_vehicle_s": 21760.85,
-  "total_delay_vehicle_s": 7771.81,
-  "minimum_gap_m": 1.9709,
-  "strongest_braking_mps2": -3.6731,
+  "max_ramp_queue": 15,
+  "max_road_queue": 43,
+  "throughput_vph": 2202.0,
+  "total_time_in_system_vehicle_s": 29381.65,
+  "total_delay_vehicle_s": 14626.78,
+  "minimum_gap_m": 1.7822,
+  "strongest_braking_mps2": -3.6908,
   "safety_interventions": 0,
-  "yield_records": 322,
-  "lane_changes": 393,
-  "mandatory_merges": 108,
+  "ramp_minimum_gap_m": 1.9856,
+  "ramp_distance_m": 10980.1872,
+  "yield_records": 121,
+  "lane_changes": 347,
+  "mandatory_merges": 77,
   "conservation_passed": true,
   "closed_lane_violations": 0
 }

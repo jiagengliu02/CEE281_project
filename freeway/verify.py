@@ -4,9 +4,11 @@ import copy
 import json
 
 from .behavior import (VEHICLE_LENGTH_M, Vehicle, courtesy_requests, idm_acceleration,
-                       lane_change_candidate, motion)
+                       lane_change_candidate, motion, lane_end, merge_urgency, blocked)
 from .model import simulate
 from .test_tmc import verify_tmc
+from .test_ramp import audit_ramp_frames, RampMotionTests
+import unittest
 
 ROOT = Path(__file__).resolve().parent
 
@@ -35,12 +37,43 @@ def check_lane_change_rules(config):
 
 def check_courtesy(config):
     """A follower yields once, then gets its own turn; no yielding without closure."""
-    merger = Vehicle(10, 'main', 0, 0, 600, 5, 0)
-    follower = Vehicle(11, 'main', 0, 0, 560, 20, 1)
+    merger = Vehicle(10, 'main', 0, 0, lane_end(config) - 10, 5, 0)
+    follower = Vehicle(11, 'main', 0, 0, lane_end(config) - 50, 20, 1)
     assert courtesy_requests([merger, follower], config, True) == {11: merger}
     assert courtesy_requests([merger, follower], config, True, {11}) == {}
     assert courtesy_requests([merger, follower], config, False) == {}
     return 'passed'
+
+
+def check_taper(config):
+    end = lane_end(config)
+    assert config['taper_start_m'] < end < config['closure_start_m']
+    remaining = config['lane_width_m'] * (config['closure_start_m'] - end) / (config['closure_start_m'] - config['taper_start_m'])
+    assert abs(remaining - config['vehicle_width_m'] - 2 * config['taper_clearance_m']) < 1e-10
+    start = config['merge_anticipation_m']
+    values = []
+    for fraction in (0, .25, .5, .8, .99):
+        car = Vehicle(0, 'main', 0, 0, start + fraction * (end - start), 0, 0)
+        values.append(merge_urgency(car, config, True))
+        fast = Vehicle(1, 'main', 0, 0, car.x - 10, 28, 1)
+        assert lane_change_candidate(car, 1, [car, fast], config, True, True) is None
+    assert values == sorted(values) and values[0] == 0 and values[-1] > .98
+    assert blocked(config, 0, end) and not blocked(config, 1, end)
+    assert not blocked(config, 0, end, False)
+    # Identical stopped-vehicle gaps: urgency changes the incentive, not safety.
+    decisions = []
+    for fraction in (0, .9):
+        car = Vehicle(0, 'main', 0, 0, start + fraction * (end-start), 0, 0)
+        lead = Vehicle(1, 'main', 0, 0, car.x + 7.5, 0, 1)
+        decisions.append(lane_change_candidate(car, 1, [car, lead], config, True, True))
+    assert decisions[0] is None and decisions[1] is not None
+    stopped = Vehicle(10, 'main', 0, 0, end - 2, 0, 0)
+    alongside = Vehicle(11, 'main', 0, 0, stopped.x - 5, 0, 1)
+    assert courtesy_requests([stopped, alongside], config, True) == {}
+    behind = Vehicle(12, 'main', 0, 0, stopped.x - 15, 0, 1)
+    assert courtesy_requests([stopped, behind], config, True) == {12: stopped}
+    return {'usable_end_m': end, 'geometry_and_increasing_urgency': 'passed',
+            'unsafe_gap_rejected_at_all_urgencies': 'passed'}
 
 
 def audit_run(config, mode, run):
@@ -56,7 +89,7 @@ def audit_run(config, mode, run):
         assert row['speed_mps'] >= 0
         if mode != 'open':
             assert not (lane == config['closed_lane']
-                        and config['closure_start_m'] <= x < config['closure_end_m'])
+                        and lane_end(config) - 1e-4 <= x < config['closure_end_m'])
         for p in config['detectors_m']:
             counts[(p, lane)] += int(old < p <= x)
         previous[vid] = x
@@ -134,6 +167,7 @@ def verify():
     config = json.loads((ROOT / 'configs/default.json').read_text())
     report = {
         'equilibrium_free_motion_and_stop': check_idm_basics(),
+        'taper_geometry_and_behavior': check_taper(config),
         'unsafe_merge_rejected_safe_merge_accepted_closed_target_rejected': check_lane_change_rules(config),
         'courtesy_request_and_yielding_vehicle_turn': check_courtesy(config),
     }
@@ -141,6 +175,10 @@ def verify():
     for mode in ['open', 'closure', 'fixed', 'adaptive', 'adaptive_fault']:
         runs[mode] = simulate(config, mode)
         report[mode + '_audit'] = audit_run(config, mode, runs[mode])
+        report[mode + '_ramp_audit'] = audit_ramp_frames(runs[mode], config)
+    ramp_tests = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(RampMotionTests))
+    assert ramp_tests.wasSuccessful()
+    report['ramp_motion_storage_and_clearing'] = 'passed'
     report['five_stage_loop'] = verify_tmc()
     report['finite_demand_pulse_clears_through_construction'] = check_pulse_clears(config)
     report['closure_time_step_sensitivity'] = check_time_step(config, runs['closure'])
