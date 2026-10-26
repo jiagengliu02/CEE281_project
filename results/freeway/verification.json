@@ -13,20 +13,20 @@
     "negative_speed": "none",
     "closed_lane_violation": "none",
     "detector_counts_by_lane": {
-      "200_lane_0": 126,
+      "200_lane_0": 124,
       "200_lane_1": 126,
-      "200_lane_2": 124,
-      "550_lane_0": 123,
-      "550_lane_1": 142,
-      "550_lane_2": 160,
-      "900_lane_0": 117,
-      "900_lane_1": 145,
-      "900_lane_2": 156
+      "200_lane_2": 126,
+      "550_lane_0": 119,
+      "550_lane_1": 141,
+      "550_lane_2": 166,
+      "900_lane_0": 116,
+      "900_lane_1": 140,
+      "900_lane_2": 161
     },
     "guard_interventions": 0
   },
   "open_ramp_audit": {
-    "moving_samples": 1520,
+    "moving_samples": 1519,
     "distinct_mainline_entries": 57,
     "no_overlap_and_identity_continuity": "passed"
   },
@@ -36,20 +36,20 @@
     "negative_speed": "none",
     "closed_lane_violation": "none",
     "detector_counts_by_lane": {
-      "200_lane_0": 116,
-      "200_lane_1": 126,
-      "200_lane_2": 134,
-      "550_lane_0": 48,
-      "550_lane_1": 114,
-      "550_lane_2": 230,
-      "900_lane_0": 34,
+      "200_lane_0": 109,
+      "200_lane_1": 130,
+      "200_lane_2": 137,
+      "550_lane_0": 41,
+      "550_lane_1": 133,
+      "550_lane_2": 218,
+      "900_lane_0": 40,
       "900_lane_1": 145,
-      "900_lane_2": 196
+      "900_lane_2": 190
     },
     "guard_interventions": 0
   },
   "closure_ramp_audit": {
-    "moving_samples": 1523,
+    "moving_samples": 1521,
     "distinct_mainline_entries": 57,
     "no_overlap_and_identity_continuity": "passed"
   },
@@ -59,21 +59,21 @@
     "negative_speed": "none",
     "closed_lane_violation": "none",
     "detector_counts_by_lane": {
-      "200_lane_0": 113,
-      "200_lane_1": 134,
-      "200_lane_2": 127,
+      "200_lane_0": 112,
+      "200_lane_1": 130,
+      "200_lane_2": 134,
       "550_lane_0": 45,
-      "550_lane_1": 124,
-      "550_lane_2": 216,
-      "900_lane_0": 29,
-      "900_lane_1": 141,
-      "900_lane_2": 200
+      "550_lane_1": 121,
+      "550_lane_2": 220,
+      "900_lane_0": 36,
+      "900_lane_1": 144,
+      "900_lane_2": 190
     },
     "guard_interventions": 0
   },
   "fixed_ramp_audit": {
-    "moving_samples": 1788,
-    "distinct_mainline_entries": 45,
+    "moving_samples": 1781,
+    "distinct_mainline_entries": 44,
     "no_overlap_and_identity_continuity": "passed"
   },
   "adaptive_audit": {
@@ -82,20 +82,20 @@
     "negative_speed": "none",
     "closed_lane_violation": "none",
     "detector_counts_by_lane": {
-      "200_lane_0": 116,
-      "200_lane_1": 126,
-      "200_lane_2": 134,
-      "550_lane_0": 48,
-      "550_lane_1": 113,
-      "550_lane_2": 226,
-      "900_lane_0": 24,
+      "200_lane_0": 109,
+      "200_lane_1": 135,
+      "200_lane_2": 132,
+      "550_lane_0": 41,
+      "550_lane_1": 133,
+      "550_lane_2": 218,
+      "900_lane_0": 40,
       "900_lane_1": 146,
-      "900_lane_2": 201
+      "900_lane_2": 189
     },
     "guard_interventions": 0
   },
   "adaptive_ramp_audit": {
-    "moving_samples": 2175,
+    "moving_samples": 1954,
     "distinct_mainline_entries": 44,
     "no_overlap_and_identity_continuity": "passed"
   },
@@ -106,19 +106,19 @@
     "closed_lane_violation": "none",
     "detector_counts_by_lane": {
       "200_lane_0": 113,
-      "200_lane_1": 129,
-      "200_lane_2": 134,
-      "550_lane_0": 48,
-      "550_lane_1": 112,
-      "550_lane_2": 224,
-      "900_lane_0": 27,
-      "900_lane_1": 146,
-      "900_lane_2": 196
+      "200_lane_1": 130,
+      "200_lane_2": 132,
+      "550_lane_0": 41,
+      "550_lane_1": 132,
+      "550_lane_2": 217,
+      "900_lane_0": 37,
+      "900_lane_1": 144,
+      "900_lane_2": 191
     },
     "guard_interventions": 0
   },
   "adaptive_fault_ramp_audit": {
-    "moving_samples": 1725,
+    "moving_samples": 1704,
     "distinct_mainline_entries": 44,
     "no_overlap_and_identity_continuity": "passed"
   },
@@ -151,7 +151,7 @@
         },
         "exits": {
           "samples": 16,
-          "mae_veh": 2.25
+          "mae_veh": 2.208333333333333
         }
       },
       "ema": {
@@ -173,13 +173,13 @@
         },
         "exits": {
           "samples": 16,
-          "mae_veh": 2.703970777503474
+          "mae_veh": 2.6419687169306667
         }
       }
     },
     "fallback_time_s": 0.0,
-    "road_estimate_mae_veh": 0.8108108108108109,
-    "ramp_estimate_mae_veh": 0.09147609147609148,
+    "road_estimate_mae_veh": 0.7484407484407485,
+    "ramp_estimate_mae_veh": 0.09355509355509356,
     "generated_vehicles": 70,
     "generated_main": 60,
     "generated_ramp": 10,
@@ -189,33 +189,33 @@
     "remaining_ramp_queue": 0,
     "max_main_queue": 0,
     "max_ramp_queue": 3,
-    "max_road_queue": 1,
+    "max_road_queue": 0,
     "throughput_vph": 420.0,
-    "total_time_in_system_vehicle_s": 3058.15,
-    "total_delay_vehicle_s": 466.8,
-    "minimum_gap_m": 2.0965,
-    "strongest_braking_mps2": -3.7176,
+    "total_time_in_system_vehicle_s": 2882.65,
+    "total_delay_vehicle_s": 292.85,
+    "minimum_gap_m": 2.3944,
+    "strongest_braking_mps2": -3.2324,
     "safety_interventions": 0,
-    "ramp_minimum_gap_m": 60.251,
+    "ramp_minimum_gap_m": 57.6804,
     "ramp_distance_m": 2000.0,
-    "yield_records": 45,
-    "lane_changes": 64,
-    "mandatory_merges": 8,
+    "yield_records": 1,
+    "lane_changes": 54,
+    "mandatory_merges": 5,
     "conservation_passed": true,
     "closed_lane_violations": 0
   },
   "closure_time_step_sensitivity": {
     "exited_vehicles": {
       "dt_0.05": 372,
-      "dt_0.025": 370
+      "dt_0.025": 372
     },
     "total_delay_vehicle_s": {
-      "dt_0.05": 14162.63,
-      "dt_0.025": 13772.22
+      "dt_0.05": 12202.46,
+      "dt_0.025": 12197.39
     },
     "minimum_gap_m": {
-      "dt_0.05": 1.8015,
-      "dt_0.025": 1.6537
+      "dt_0.05": 1.7023,
+      "dt_0.025": 1.6436
     },
     "remaining_main_queue": {
       "dt_0.05": 0,
@@ -226,8 +226,8 @@
       "dt_0.025": 3
     },
     "mandatory_merges": {
-      "dt_0.05": 92,
-      "dt_0.025": 90
+      "dt_0.05": 76,
+      "dt_0.025": 76
     }
   },
   "time_step_note": "Lane/gap event timing is discrete; sensitivity is reported, not forced to match.",
@@ -283,29 +283,29 @@
       }
     },
     "fallback_time_s": 0.0,
-    "road_estimate_mae_veh": 17.0,
-    "ramp_estimate_mae_veh": 7.0,
+    "road_estimate_mae_veh": 18.0,
+    "ramp_estimate_mae_veh": 8.0,
     "generated_vehicles": 440,
     "generated_main": 400,
     "generated_ramp": 40,
-    "exited_vehicles": 60,
-    "remaining_on_road": 118,
-    "remaining_main_queue": 229,
-    "remaining_ramp_queue": 33,
-    "max_main_queue": 229,
-    "max_ramp_queue": 33,
-    "max_road_queue": 65,
-    "throughput_vph": 1800.0,
-    "total_time_in_system_vehicle_s": 23895.1,
-    "total_delay_vehicle_s": 19841.43,
-    "minimum_gap_m": 1.668,
-    "strongest_braking_mps2": -3.534,
+    "exited_vehicles": 64,
+    "remaining_on_road": 119,
+    "remaining_main_queue": 226,
+    "remaining_ramp_queue": 31,
+    "max_main_queue": 226,
+    "max_ramp_queue": 31,
+    "max_road_queue": 62,
+    "throughput_vph": 1920.0,
+    "total_time_in_system_vehicle_s": 23636.85,
+    "total_delay_vehicle_s": 19395.42,
+    "minimum_gap_m": 1.5794,
+    "strongest_braking_mps2": -5.2746,
     "safety_interventions": 0,
-    "ramp_minimum_gap_m": 1.9856,
-    "ramp_distance_m": 3870.7571,
-    "yield_records": 36,
-    "lane_changes": 26,
-    "mandatory_merges": 13,
+    "ramp_minimum_gap_m": 1.99,
+    "ramp_distance_m": 4356.0174,
+    "yield_records": 33,
+    "lane_changes": 37,
+    "mandatory_merges": 14,
     "conservation_passed": true,
     "closed_lane_violations": 0
   }

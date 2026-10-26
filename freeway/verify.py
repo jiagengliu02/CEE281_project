@@ -164,6 +164,9 @@ def check_overload(config):
 
 def verify():
     """Run all checks and write results/freeway/verification.json."""
+    from .test_drivers import DriverTests
+    driver_tests = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(DriverTests))
+    assert driver_tests.wasSuccessful()
     config = json.loads((ROOT / 'configs/default.json').read_text())
     report = {
         'equilibrium_free_motion_and_stop': check_idm_basics(),

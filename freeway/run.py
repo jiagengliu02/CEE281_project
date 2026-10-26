@@ -40,7 +40,7 @@ def run_experiments(config, output):
         folder.mkdir(exist_ok=True)
         for key, fields in CSV_FIELDS.items():
             write_csv(folder / f'{key}.csv', run[key], fields)
-        for key in ('control_log', 'boundary_observations', 'estimates', 'forecasts'):
+        for key in ('control_log', 'boundary_observations', 'estimates', 'forecasts', 'drivers'):
             rows = run[key]
             if rows:
                 write_csv(folder / f'{key}.csv', rows, list(rows[0]))
@@ -71,7 +71,7 @@ def write_report(output, payload):
     metrics = [payload['runs'][mode]['metrics'] for mode in MODES]
     write_csv(output / 'summary.csv', [{k:m[k] for k in fields} for m in metrics], fields)
     lines = ['# Five-stage ramp-control experiment', '',
-             'Same deterministic demand and vehicle driver classes in all modes. '
+             'Same deterministic demand and per-vehicle driver parameters in all modes. '
              'Only open has no lane closure; compare closure/fixed/adaptive for control effects.', '',
              '| Mode | Departures | Total delay (veh.min) | Residual main / ramp / road (veh) | Fallback (s) |',
              '|---|---:|---:|---:|---:|']

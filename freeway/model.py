@@ -9,6 +9,7 @@ Boundary reports -> estimates -> forecasts -> metering -> IDM motion -> evaluati
 from .observation import BoundaryDetectors, RampObservation, CHANNELS
 from .control import RampController
 from .ramp import RampRoad
+from .drivers import driver_parameters, validate_drivers
 
 from dataclasses import dataclass
 import math
@@ -18,7 +19,6 @@ from .behavior import (VEHICLE_LENGTH_M, Vehicle, blocked, courtesy_requests, id
 
 ENTRY_MIN_GAP_M = 2            # standstill gap required when a vehicle enters the road
 ENTRY_CLOSING_FACTOR_S = 2     # extra entry gap per m/s the follower is faster than the new car
-SPEED_CLASSES = 5              # desired speed = base + variation * {-1, -0.5, 0, 0.5, 1}
 GUARD_CLEARANCE_M = .01        # numerical guard keeps this distance to a leader or lane end
 OWED_PASSAGE_RANGE_M = 5       # a yielding car keeps its owed turn until this far past closure start
 
@@ -31,9 +31,8 @@ class DetectorBin:
 
 
 def preferred_speed(config, vehicle_id):
-    """Deterministic desired speed so every mode gives a vehicle the same driver."""
-    speed_class = (vehicle_id % SPEED_CLASSES) - 2
-    return config['desired_speed_mps'] + config['speed_variation_mps'] * speed_class / 2
+    """Desired speed for the reproducible driver assigned to this identity."""
+    return driver_parameters(config, vehicle_id)['desired_speed']
 
 
 def current_demand(config, t):
@@ -54,6 +53,7 @@ class FreewaySimulation:
         self.dt = config['dt_s']
         self.lanes = config['lanes']
 
+        self.drivers = {}
         self.vehicles = []
         self.queues = {f'main_{i}': [] for i in range(self.lanes)}   # boundary queues
         self.queues['ramp'] = []
@@ -135,6 +135,7 @@ class FreewaySimulation:
                     queue = f'main_{self.arrivals[origin] % self.lanes}'
                 else:
                     queue = 'ramp'
+                self.drivers[vehicle_id] = driver_parameters(self.c, vehicle_id)
                 self.queues[queue].append((t, vehicle_id))
                 self.arrivals[origin] += 1
                 self.boundary_detectors.cross(origin + '_arrivals')
@@ -150,7 +151,10 @@ class FreewaySimulation:
         born, vehicle_id = queue[0]
         if origin == 'ramp' and not self.ramp.ready(vehicle_id):
             return False
-        desired = preferred_speed(self.c, vehicle_id)
+        if vehicle_id not in self.drivers:
+            self.drivers[vehicle_id] = driver_parameters(self.c, vehicle_id)
+        parameters = self.drivers[vehicle_id]
+        desired = parameters['desired_speed']
         speed = min(desired, lead.v if lead else desired)
         # Restore the original mainline handoff speed; ramp crawl speed
         # does not cap the vehicle after it joins the freeway.
@@ -164,7 +168,7 @@ class FreewaySimulation:
                       + max(0, follow.v - speed) * ENTRY_CLOSING_FACTOR_S)
             if gap_behind < needed:
                 return False
-            candidate = Vehicle(vehicle_id, origin, born, t, x, speed, lane, desired_speed=desired)
+            candidate = Vehicle(vehicle_id, origin, born, t, x, speed, lane, **parameters)
             follower_accel = raw_acceleration(follow, candidate, lane, self.c, self.closure)
             if follower_accel < -self.c['lane_change_safe_braking_mps2']:
                 return False
@@ -174,7 +178,7 @@ class FreewaySimulation:
             self.ramp.remove_front()
         self.boundary_detectors.cross(origin + '_entries')
         self.vehicles.append(Vehicle(vehicle_id, origin, born, t, x, speed, lane,
-                                     desired_speed=desired, previous_lane=lane, entry_speed=speed,
+                                     **parameters, previous_lane=lane, entry_speed=speed,
                                      lane_change_time=t if origin == 'ramp' else -100.0))
         return True
 
@@ -427,7 +431,8 @@ class FreewaySimulation:
             'conservation_passed': True,    # check_invariants() asserts this every step
             'closed_lane_violations': 0,    # compute_updates() asserts this every step
         }
-        return {'metrics': metrics, 'frames': self.frames, 'observations': self.observations,
+        return {'drivers': [dict(vehicle_id=vid, **params) for vid, params in sorted(self.drivers.items())],
+                'metrics': metrics, 'frames': self.frames, 'observations': self.observations,
                 'traces': self.traces, 'control_log': self.control_log,
                 'lane_changes': self.lane_changes, 'yield_log': self.yield_log,
                 'boundary_observations': self.boundary_detectors.records,
@@ -440,6 +445,7 @@ def simulate(config, mode='closure'):
 
 
 def validate(c):
+    validate_drivers(c)
     if c['dt_s'] <= 0 or c['duration_s'] <= 0 or c['lanes'] < 2:
         raise ValueError('Positive time parameters and at least two lanes required')
     for name in ['duration_s', 'frame_interval_s', 'detector_interval_s', 'lane_change_interval_s']:

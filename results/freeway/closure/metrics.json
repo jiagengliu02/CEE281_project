@@ -18,11 +18,11 @@
       },
       "ramp_entries": {
         "samples": 16,
-        "mae_veh": 0.6666666666666665
+        "mae_veh": 0.625
       },
       "exits": {
         "samples": 16,
-        "mae_veh": 1.8749999999999998
+        "mae_veh": 1.5
       }
     },
     "ema": {
@@ -40,17 +40,17 @@
       },
       "ramp_entries": {
         "samples": 16,
-        "mae_veh": 0.732254254099781
+        "mae_veh": 0.67762746157199
       },
       "exits": {
         "samples": 16,
-        "mae_veh": 2.4656071957123666
+        "mae_veh": 2.3621952449143757
       }
     }
   },
   "fallback_time_s": 0.0,
-  "road_estimate_mae_veh": 2.604989604989605,
-  "ramp_estimate_mae_veh": 0.5031185031185031,
+  "road_estimate_mae_veh": 2.401247401247401,
+  "ramp_estimate_mae_veh": 0.498960498960499,
   "generated_vehicles": 440,
   "generated_main": 380,
   "generated_ramp": 60,
@@ -60,18 +60,18 @@
   "remaining_ramp_queue": 3,
   "max_main_queue": 0,
   "max_ramp_queue": 4,
-  "max_road_queue": 49,
+  "max_road_queue": 45,
   "throughput_vph": 2232.0,
-  "total_time_in_system_vehicle_s": 29181.45,
-  "total_delay_vehicle_s": 14162.63,
-  "minimum_gap_m": 1.8015,
-  "strongest_braking_mps2": -3.7176,
+  "total_time_in_system_vehicle_s": 27184.15,
+  "total_delay_vehicle_s": 12202.46,
+  "minimum_gap_m": 1.7023,
+  "strongest_braking_mps2": -5.8018,
   "safety_interventions": 0,
-  "ramp_minimum_gap_m": 17.1775,
-  "ramp_distance_m": 11670.1326,
-  "yield_records": 194,
-  "lane_changes": 504,
-  "mandatory_merges": 92,
+  "ramp_minimum_gap_m": 9.1993,
+  "ramp_distance_m": 11670.0434,
+  "yield_records": 104,
+  "lane_changes": 480,
+  "mandatory_merges": 76,
   "conservation_passed": true,
   "closed_lane_violations": 0
 }

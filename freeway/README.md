@@ -16,7 +16,7 @@ The viewer has five modes: forecast-assisted metering, adaptive metering with de
 
 The current freeway has three lanes. The left lane tapers from 500 to 650 m and is fully closed from 650 to 850 m, creating a three-to-two-lane merging bottleneck. There is no desired-speed reduction zone: slowing emerges from car following, merging, and queuing.
 
-Three paired runs use identical arrivals, driver identities, desired speeds, and initially empty roads:
+Five paired runs use identical arrivals, driver identities, IDM parameters, and initially empty roads:
 
 - `open`: no work zone; all three lanes open; ramp vehicles enter whenever the gap rules permit.
 - `closure`: left-lane closure; unmetered ramp.
@@ -30,14 +30,24 @@ Default demand is total mainline demand across all lanes: 1800 mainline + 300 ra
 
 ## Vehicle motion: IDM
 
-Position is the front-bumper location in meters; speed is in m/s. Net gap is the distance from the preceding vehicle rear to the following vehicle front. Vehicle length is 5 m. Desired speed is one of 25, 26.5, 28, 29.5, or 31 m/s, determined by ID. Desired time headway is 1.5 s, standstill gap 2 m, acceleration parameter 1.2 m/s², and comfortable deceleration 2 m/s².
+Position is the front-bumper location in meters; speed is in m/s. Net gap is the distance from the preceding vehicle rear to the following vehicle front. Vehicle length is 5 m. Each driver receives five independent truncated-Gaussian parameters at demand arrival, held fixed throughout mainline driving. The configuration's `driver_distribution.seed` and vehicle ID determine reproducible draws, independent of control mode or entry timing.
+
+| Vehicle attribute | Mean | Standard deviation | Bounds | Units |
+| --- | ---: | ---: | --- | --- |
+| desired_speed | 28 | 2 | 22–34 | m/s |
+| headway | 1.5 | 0.2 | 0.9–2.1 | s |
+| max_accel | 1.2 | 0.2 | 0.6–1.8 | m/s² |
+| comfortable_braking | 2 | 0.3 | 1.1–2.9 | m/s² |
+| min_gap | 2 | 0.3 | 1.1–2.9 | m |
+
+Out-of-range draws are rejected and resampled, not clipped. These distributions are teaching assumptions, not calibrated driver populations. Edit `driver_distribution` in the configuration to change means, standard deviations, bounds or seed; `std: 0` gives a constant. Each run exports `drivers.csv`, including drivers still waiting at the boundary. Legacy configurations without this section retain the former five speed classes and constant remaining parameters. `desired_speed_mps` and `speed_variation_mps` no longer select driver speeds when this section is present. The separate low-speed ramp IDM retains its existing fixed parameters; ramp-origin drivers receive their assigned random parameters upon mainline handoff.
 
 ```text
 s* = s0 + max(0, v T + v (v - v_leader) / (2 sqrt(a b)))
 acceleration = a [1 - (v / v0)^4 - (s* / s)^2]
 ```
 
-Vehicles follow the leader in their current lane. All longitudinal accelerations are calculated from the same time snapshot before motion is updated. Ballistic integration handles stopping within a timestep to prevent negative speeds. Acceleration is additionally bounded to [-6, 1.2] m/s², an explicit assumption of this prototype.
+Vehicles follow the leader in their current lane. All longitudinal accelerations are calculated from the same time snapshot before motion is updated. Ballistic integration handles stopping within a timestep to prevent negative speeds. Acceleration is additionally bounded to [-6, driver.max_accel] m/s², an explicit assumption of this prototype.
 
 ## How the work zone creates a bottleneck
 
@@ -104,7 +114,9 @@ The output contains `open/`, `closure/`, `fixed/`, `adaptive/`, and `adaptive_fa
 
 Useful parameters include `merge_anticipation_m`, `closure_start_m`, `closure_end_m`, `lane_change_safe_braking_mps2`, `politeness`, and `demand`. The prototype supports a left-lane closure; changes to road layout or lane count also require corresponding viewer changes.
 
-## Default freeway results and checks
+## Historical fixed-parameter results and checks
+
+The numerical results below predate Gaussian driver heterogeneity. Use the regenerated `results/freeway/experiment_report.md` and `verification.json` for the current configuration.
 
 Default demand was reduced to make merging easier to inspect. To run the earlier higher-demand configuration:
 

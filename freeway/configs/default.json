@@ -81,5 +81,38 @@
   "mandatory_merge_urgency": 0.8,
   "courtesy_start_urgency": 0.35,
   "ramp_length_m": 200,
-  "ramp_desired_speed_mps": 12
+  "ramp_desired_speed_mps": 12,
+  "driver_distribution": {
+    "seed": 281,
+    "desired_speed": {
+      "mean": 28,
+      "std": 2,
+      "min": 22,
+      "max": 34
+    },
+    "headway": {
+      "mean": 1.5,
+      "std": 0.2,
+      "min": 0.9,
+      "max": 2.1
+    },
+    "max_accel": {
+      "mean": 1.2,
+      "std": 0.2,
+      "min": 0.6,
+      "max": 1.8
+    },
+    "comfortable_braking": {
+      "mean": 2,
+      "std": 0.3,
+      "min": 1.1,
+      "max": 2.9
+    },
+    "min_gap": {
+      "mean": 2,
+      "std": 0.3,
+      "min": 1.1,
+      "max": 2.9
+    }
+  }
 }
