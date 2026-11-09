@@ -1,1 +1,1 @@
-"""Intersection traffic environment and experiments."""
+"""Isolated signalized intersection built on the freeway IDM vehicle model."""

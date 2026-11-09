@@ -2,7 +2,7 @@
 
 Examples:
     python3 run.py freeway
-    python3 run.py intersection --scenario directional_shift --seed 11
+    python3 run.py intersection --scenario directional_shift
     python3 run.py check all
 """
 import argparse
@@ -30,8 +30,6 @@ def main(argv=None):
         if branch == 'intersection':
             command.add_argument('--scenario', action='append',
                                  help='Select a scenario; repeat for several (default: all)')
-            command.add_argument('--seed', type=int, action='append',
-                                 help='Select a seed; repeat for several (default: config seeds)')
     check = commands.add_parser('check', help='Run independent verification checks')
     check.add_argument('branch', choices=(*BRANCHES, 'all'), nargs='?', default='all')
     args = parser.parse_args(argv)
@@ -55,7 +53,7 @@ def main(argv=None):
             unknown = set(args.scenario) - set(config['scenarios'])
             if unknown:
                 parser.error('Unknown intersection scenarios: ' + ', '.join(sorted(unknown)))
-        runner.run_experiments(config, output, args.scenario, args.seed)
+        runner.run_experiments(config, output, args.scenario)
     else:
         runner.run_experiments(config, output)
     viewer = output / 'viewer.html'

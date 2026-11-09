@@ -1,40 +1,302 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CEE281 · Signal Control Lab</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CEE281 · Signalized Intersection</title>
 <style>
-:root{--paper:#f3f2ed;--ink:#18302d;--muted:#65756f;--line:#d9dfd8;--green:#216b57;--orange:#cf793b}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px system-ui,-apple-system,"Arial",sans-serif}.wrap{max-width:1320px;margin:auto;padding:30px}header{display:flex;justify-content:space-between;gap:20px;align-items:center}h1{font-size:32px;letter-spacing:-1px;margin:10px 0}.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green)}p{line-height:1.7;color:var(--muted)}.tag{border:1px solid var(--line);border-radius:24px;padding:9px 14px;white-space:nowrap}.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;background:white;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:20px 0}button,select{font:inherit;border:1px solid var(--line);border-radius:6px;padding:8px 12px;background:white;color:var(--ink)}button{cursor:pointer}button.primary{background:var(--green);color:white}input[type=range]{flex:1;min-width:140px;accent-color:var(--green)}.time{font-variant-numeric:tabular-nums;min-width:98px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:18px;min-width:0}.head{flex-wrap:wrap;padding:18px 20px 10px;display:flex;justify-content:space-between;align-items:center;gap:10px}h2{font-size:16px;margin:0}.pill{font-size:12px;padding:5px 9px;border-radius:5px;background:#eaf4ee;color:var(--green)}canvas{width:100%;display:block}.intersection{height:310px;background:#142c2d}.chart{height:220px}.timeline{height:135px}.stats{display:grid;grid-template-columns:repeat(3,1fr);padding:14px 20px;gap:10px}.label{font-size:11px;color:var(--muted)}.number{font-size:23px;margin-top:4px}.note{padding:0 20px 16px;font-size:12px;color:var(--muted);line-height:1.7}.decision{padding:12px 20px;background:#f7f9f6;min-height:72px;font-size:12px;line-height:1.8}.legend{font-size:12px;color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:12px 16px;border-bottom:1px solid #edf0eb;text-align:right}th:first-child,td:first-child{text-align:left}.table-wrap{overflow:auto}footer{font-size:12px;color:var(--muted);line-height:1.8;margin:18px 0}.summary{padding:16px 20px;background:#eaf4ee;line-height:1.7}a{color:var(--green)}@media(max-width:800px){.wrap{padding:18px 12px}.grid{grid-template-columns:1fr}.tag{display:none}h1{font-size:26px}.stats{padding:12px}.number{font-size:20px}}
-</style></head><body><main class="wrap">
-<header><div><div class="eyebrow">CEE281 / SIGNAL CONTROL LAB</div><h1>Same arrivals. Different signal strategies.</h1><p>Isolated intersection · Finite storage · Observation-driven control<br>Compare fixed-time and queue-responsive control under changing demand and detector faults.</p></div><span class="tag">Numerical simulation · Offline replay</span></header>
-<div class="toolbar"><label for="scenario">Scenario</label><select id="scenario"></select><label for="candidate">Compare</label><select id="candidate"><option value="adaptive">Queue-responsive</option><option value="adaptive_no_hysteresis">Ablation: zero switching threshold</option></select><button id="play" class="primary">Play</button><button id="reset">Reset</button><input id="scrub" type="range" min="0" step="1" value="300" aria-label="Replay time"><span id="time" class="time"></span><select id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="5">5×</option><option value="15" selected>15×</option><option value="60">60×</option></select><button id="event">Jump to event</button></div>
-<div class="grid"><section class="panel"><div class="head"><h2>Fixed-time</h2><span id="fixed-phase" class="pill"></span></div><canvas id="fixed-road" class="intersection" aria-label="Fixed-time intersection queue schematic"></canvas><div class="stats"><div><div class="label">Road / external queue now</div><div class="number" id="fixed-q"></div></div><div><div class="label">Departures so far</div><div class="number" id="fixed-exits"></div></div><div><div class="label">Full-run delay · veh·min</div><div class="number" id="fixed-delay"></div></div></div><div class="decision" id="fixed-decision"></div></section>
-<section class="panel"><div class="head"><h2 id="candidate-title">Queue-responsive control</h2><span id="candidate-phase" class="pill"></span></div><canvas id="candidate-road" class="intersection" aria-label="Responsive-control intersection queue schematic"></canvas><div class="stats"><div><div class="label">Road / external queue now</div><div class="number" id="candidate-q"></div></div><div><div class="label">Departures so far</div><div class="number" id="candidate-exits"></div></div><div><div class="label">Full-run delay · veh·min</div><div class="number" id="candidate-delay"></div></div></div><div class="decision" id="candidate-decision"></div></section></div>
-<section class="panel"><div class="summary" id="summary"></div><div class="note" style="padding-top:12px">Blocks represent queued vehicles, with at most 10 drawn per approach; they are not spatial trajectories. No stop-line service occurs during yellow or all-red. Truth is used for replay and evaluation; control reads estimates. External queues contribute to delay but are not directly visible to the controller.</div></section>
-<section class="panel"><div class="head"><h2>Signal phase timeline</h2><span class="legend">Green: N–S · Blue: E–W · Amber: yellow · Gray: all-red</span></div><canvas id="timeline" class="timeline"></canvas></section>
-<div class="grid"><section class="panel"><div class="head"><h2>Total waiting vehicles · Including external queues</h2><span class="legend">Dark green: fixed · Orange: responsive</span></div><canvas id="queues" class="chart"></canvas><div class="note">Identical arrivals, initially empty queues, and analysis duration. The vertical line marks replay time.</div></section><section class="panel"><div class="head"><h2>Queue truth vs. estimate</h2><select id="approach" aria-label="Approach to compare"><option>N</option><option>S</option><option>E</option><option>W</option></select></div><canvas id="estimate" class="chart"></canvas><div class="note">Responsive control: dark green is the actual road queue; dashed orange is its estimate. Missing or stale observations trigger fixed-time fallback.</div></section></div>
-<section class="panel"><div class="head"><h2>Paired experiments across seeds</h2><span class="legend">Positive saving = less delay than fixed-time control</span></div><div class="table-wrap"><table><thead><tr><th>Scenario / controller</th><th>Mean delay<br>veh·min</th><th>Mean departures<br>veh</th><th>External residual<br>veh</th><th>Paired saving<br>veh·min</th></tr></thead><tbody id="comparison"></tbody></table></div></section>
-<footer id="footer"></footer></main>
+:root{--paper:#f3f2ed;--ink:#18302d;--muted:#677671;--line:#d9dfd8;--green:#216b57;--orange:#d98243;--white:#fff}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px system-ui,-apple-system,"Arial",sans-serif}.wrap{max-width:1440px;margin:auto;padding:30px 36px 40px}.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green)}header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px}h1{font-size:32px;font-weight:600;letter-spacing:-1px;margin:9px 0}header p{color:var(--muted);margin:0;line-height:1.7}.tag{border:1px solid var(--line);border-radius:30px;padding:9px 14px;font-size:12px;white-space:nowrap}.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;background:white;border:1px solid var(--line);border-radius:12px;margin-bottom:18px}button,select{font:inherit;border:1px solid var(--line);border-radius:6px;padding:8px 12px;background:white;color:var(--ink);cursor:pointer}button.primary{background:var(--green);border-color:var(--green);color:white}button:hover{filter:brightness(.94)}label{font-size:12px;color:var(--muted)}input[type=range]{flex:1;min-width:160px;accent-color:var(--green)}.time{font-variant-numeric:tabular-nums;width:116px;white-space:nowrap;font-weight:600}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.card{background:white;border:1px solid var(--line);padding:18px 20px;border-radius:10px}.card .label{font-size:12px;color:var(--muted)}.value{font-size:28px;font-weight:600;margin:6px 0;overflow-wrap:anywhere}.unit{font-size:12px;color:var(--muted);font-weight:400}.sub{font-size:12px;color:var(--muted);line-height:1.6}.panel{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:18px;min-width:0}.panelhead{flex-wrap:wrap;padding:18px 20px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px}.panelhead h2{font-size:16px;margin:0;font-weight:600}.legend{font-size:11px;color:var(--muted);display:flex;gap:15px;align-items:center;flex-wrap:wrap}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.road{background:#132a2b;padding:8px}.road canvas{width:100%;aspect-ratio:1/1;display:block;max-height:720px;margin:auto}.roadfoot{flex-wrap:wrap;gap:8px;background:#132a2b;color:#b9d1c9;display:flex;justify-content:space-between;padding:0 20px 14px;font-size:12px}.layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.plot{width:100%;height:230px;display:block}.plot.tall{height:300px}.plot.short{height:150px}.plotpad{padding:0 12px 10px}.info{padding:0 20px 16px;font-size:12px;color:var(--muted);line-height:1.7}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 16px;border-bottom:1px solid #edf0eb;vertical-align:top}th{font-size:11px;color:var(--muted);font-weight:500}tr:last-child td{border-bottom:0}td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}.badge{color:var(--green);background:#eaf4ee;border-radius:4px;padding:3px 7px;font-size:11px}.badge.warn{color:#8a4b12;background:#fbeedd}.small{font-size:11px}footer{padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;line-height:1.7}tr.current td{background:#f4f8f5;font-weight:600}
+@media(max-width:1000px){.wrap{padding:20px 16px}.cards{grid-template-columns:repeat(2,1fr)}.layout,.grid{grid-template-columns:1fr}header{display:block}.tag{display:none}h1{font-size:26px}}
+</style></head><body><div class="wrap">
+<header><div><div class="eyebrow">CEE281 / NUMERICAL TRAFFIC LAB · FINAL PATHWAY B</div><h1>Signalized intersection: loops, queues and phase decisions</h1><p>Four single-lane IDM approaches · Advance and stop-line loops → queue estimates → arrival forecasts → phase decisions → IDM response</p></div><div class="tag">Teaching prototype · SI units</div></header>
+<div class="toolbar"><label for="scenario">Scenario</label><select id="scenario"></select><label for="mode">Controller</label><select id="mode"></select><button class="primary" id="play">Play</button><button id="reset">Reset</button><button id="jumpShift">Jump to demand change</button><input id="scrub" aria-label="Simulation time" type="range" min="0" max="900" step="1" value="0"><span class="time" id="time"></span><select id="rate" aria-label="Playback speed"><option value="1">1×</option><option value="2" selected>2×</option><option value="5">5×</option><option value="20">20×</option><option value="60">60×</option></select></div>
+<div class="cards"><div class="card"><div class="label">Signal now</div><div class="value" id="signal"></div><div class="sub" id="signalsub"></div></div><div class="card"><div class="label">Vehicles on the approaches</div><div class="value" id="n"></div><div class="sub">Exited <span id="exits"></span> veh · waiting at boundaries <span id="boundary"></span></div></div><div class="card"><div class="label">Full-run total delay</div><div class="value" id="delay"></div><div class="sub">Includes boundary waits and unfinished trips · <span id="saving"></span></div></div><div class="card"><div class="label">Full-run throughput</div><div class="value" id="throughput"></div><div class="sub"><span id="greens"></span> green phases · fallback <span id="fallback"></span> s</div></div></div>
+<div class="layout">
+<section class="panel"><div class="panelhead"><h2>Intersection replay</h2><div class="legend"><span><i class="dot" style="background:#46ba97"></i>N–S vehicles</span><span><i class="dot" style="background:#edaa65"></i>E–W vehicles</span><span><i class="dot" style="background:#f4e04d"></i>Committed in yellow</span><span>▭ advance loop · ▮ stop line</span></div></div>
+<div class="road"><canvas id="road" width="800" height="800"></canvas></div><div class="roadfoot"><span id="roadnote">Positions interpolate between 1 s frames. Right-hand traffic; exits leave 60 m past the box.</span><span id="qnote"></span></div></section>
+<div>
+<section class="panel"><div class="panelhead"><h2>Phase timeline</h2><div class="legend"><span><i class="dot" style="background:#2e9e6d"></i>green</span><span><i class="dot" style="background:#e3c13a"></i>yellow</span><span><i class="dot" style="background:#c0392b"></i>red / all-red</span><span>dashed: demand change · shaded: fallback</span></div></div><div class="plotpad"><canvas id="phases" class="plot short"></canvas></div></section>
+<section class="panel"><div class="panelhead"><h2>Queue in the detector zone: truth vs estimate</h2><div class="legend"><span>solid: true vehicles between advance loop and stop line</span><span>dashed: estimate from cumulative loop counts</span><span>grey: boundary (unmet) queue</span></div></div><div class="plotpad"><canvas id="queues" class="plot tall"></canvas></div></section>
+<section class="panel"><div class="panelhead"><h2>Decision trace at the current time</h2><span class="badge" id="reasonbadge"></span></div><table id="trace"></table><div class="info">Observe → estimate → predict → decide → act → evaluate. The controller sees loop reports only; the truth column is evaluation-only.</div></section>
+</div></div>
+<div class="grid">
+<section class="panel"><div class="panelhead"><h2>Arrival forecast at the advance loop</h2><div class="legend"><label for="fcApproach">Approach</label><select id="fcApproach"><option>N</option><option>S</option><option>E</option><option>W</option></select><span><i class="dot" style="background:#18302d"></i>actual next 30 s</span><span><i class="dot" style="background:#2a78d6"></i>EMA</span><span><i class="dot" style="background:#d98243"></i>moving average</span></div></div><div class="plotpad"><canvas id="forecast" class="plot"></canvas></div><div class="info" id="fcnote"></div></section>
+<section class="panel"><div class="panelhead"><h2>Controllers on this scenario</h2><span class="small" id="plannote"></span></div><table id="compare"></table><div class="info">Same arrival table and driver parameters for every controller. Saving is relative to the Webster fixed-time plan; negative means worse. Red runs must be 0; box conflicts must be 0.</div></section>
+</div>
+<footer><div id="footnote"></div>Synthetic teaching model with declared, uncalibrated parameters. Delay and queue indicators describe this model only and do not establish real-world safety or crash effects.</footer>
+</div>
 <script>
-const DATA=__SIGNAL_DATA__;
-const $=id=>document.getElementById(id), colors={NS:'#49bc98',EW:'#79afe0',yellow:'#edbd67',all_red:'#738080'};
-const labels={fixed:'Fixed-time',adaptive:'Queue-responsive',adaptive_no_hysteresis:'Zero threshold'};
-const reasons={minimum_green:'Minimum green in progress',hold_green:'Hold current green',fixed_plan:'Follow fixed-time plan',fallback_fixed:'Observation fault: fixed-time fallback',maximum_green:'Maximum green reached',opposing_queue_larger:'Opposing estimated queue is larger',current_queue_empty:'Current estimated queue is empty',yellow_complete:'Yellow complete: enter all-red',clearance_complete:'Clearance complete: start next green',clearance_in_progress:'Clearance in progress'};
-const phaseName=p=>{let [g,...s]=p.split('_');return (g==='NS'?'N–S':'E–W')+' · '+({green:'Green',yellow:'Yellow',all_red:'All-red'}[s.join('_')]);};
-let time=Math.min(300,DATA.config.duration_s),playing=false,last=0;
-for(const [key,s] of Object.entries(DATA.scenarios)){const o=document.createElement('option');o.value=key;o.textContent=s.label;$('scenario').appendChild(o);}
-if(DATA.scenarios.directional_shift)$('scenario').value='directional_shift';
-$('scrub').max=DATA.config.duration_s;
-function run(mode){return DATA.runs[$('scenario').value+'/'+mode];}
-function frame(r){return r.frames[Math.min(r.frames.length-1,Math.floor(time/DATA.config.frame_interval_s))];}
-function setup(id){const el=$(id),rect=el.getBoundingClientRect(),dpr=window.devicePixelRatio||1;el.width=rect.width*dpr;el.height=rect.height*dpr;const c=el.getContext('2d');c.scale(dpr,dpr);return [c,rect.width,rect.height];}
-function road(id,f){const [c,w,h]=setup(id),cx=w/2,cy=h/2;c.fillStyle='#142c2d';c.fillRect(0,0,w,h);c.fillStyle='#254346';c.fillRect(cx-48,0,96,h);c.fillRect(0,cy-48,w,96);c.strokeStyle='#6a8581';c.setLineDash([8,8]);c.beginPath();c.moveTo(cx,0);c.lineTo(cx,cy-48);c.moveTo(cx,cy+48);c.lineTo(cx,h);c.moveTo(0,cy);c.lineTo(cx-48,cy);c.moveTo(cx+48,cy);c.lineTo(w,cy);c.stroke();c.setLineDash([]);
-const [group,...ss]=f.phase.split('_'),stage=ss.join('_');
-for(const [a,rot] of [['N',0],['E',Math.PI/2],['S',Math.PI],['W',-Math.PI/2]]){c.save();c.translate(cx,cy);c.rotate(rot);c.strokeStyle='#dbe7df';c.lineWidth=2;c.beginPath();c.moveTo(-45,-51);c.lineTo(-3,-51);c.stroke();const active=(group==='NS'?'NS':'EW').includes(a);c.fillStyle=active&&stage==='green'?colors.NS:active&&stage==='yellow'?colors.yellow:'#da6d67';c.beginPath();c.arc(-58,-57,6,0,Math.PI*2);c.fill();for(let i=0;i<Math.min(10,f.queues[a]);i++){c.fillStyle=active&&stage==='green'?'#6dc4a4':'#c8d8d2';c.fillRect(-34,-67-i*8,18,6);}c.restore();}
-c.font='12px system-ui';c.textAlign='left';c.fillStyle='#dcebe4';c.fillText('N  Queue '+f.queues.N+' / External '+f.external.N,15,23);c.fillText('W  Queue '+f.queues.W+' / External '+f.external.W,15,h-20);c.textAlign='right';c.fillText('E  Queue '+f.queues.E+' / External '+f.external.E,w-15,23);c.fillText('S  Queue '+f.queues.S+' / External '+f.external.S,w-15,h-20);c.textAlign='center';c.font='bold 14px system-ui';c.fillText(stage==='green'?(group==='NS'?'↕':'↔'):stage==='yellow'?'Yellow':'All-red',cx,cy+5);}
-function plot(id,series){const [c,w,h]=setup(id),l=48,r=w-16,top=25,b=h-30,max=Math.max(5,...series.flatMap(s=>s.values.map(p=>p[1])))*1.1,x=t=>l+t/DATA.config.duration_s*(r-l),y=v=>b-v/max*(b-top);c.font='10px system-ui';for(let i=0;i<=4;i++){let yy=y(max*i/4);c.strokeStyle='#e6ece6';c.beginPath();c.moveTo(l,yy);c.lineTo(r,yy);c.stroke();c.fillStyle='#68796f';c.textAlign='right';c.fillText((max*i/4).toFixed(0),l-7,yy+3);}for(let i=0;i<=5;i++){let t=DATA.config.duration_s*i/5;c.textAlign='center';c.fillText(t.toFixed(0),x(t),b+16);}c.textAlign='left';c.fillText('Vehicles (veh)',l,13);c.fillText('Time (s)',r-38,h-2);for(const s of series){c.strokeStyle=s.color;c.lineWidth=1.8;c.setLineDash(s.dash?[5,4]:[]);c.beginPath();s.values.forEach(([t,v],i)=>i?c.lineTo(x(t),y(v)):c.moveTo(x(t),y(v)));c.stroke();}c.setLineDash([3,3]);c.strokeStyle='#899b91';c.beginPath();c.moveTo(x(time),top);c.lineTo(x(time),b);c.stroke();c.setLineDash([]);}
-function timeline(a,b){const [c,w,h]=setup('timeline'),l=104,r=w-20,x=t=>l+t/DATA.config.duration_s*(r-l);c.font='11px system-ui';for(const [run,row] of [[a,0],[b,1]]){let yy=22+row*39;c.fillStyle='#53685d';c.fillText(row?'Responsive':'Fixed',20,yy+16);for(let i=0;i<run.frames.length-1;i++){let f=run.frames[i],[g,...ss]=f.phase.split('_'),s=ss.join('_');c.fillStyle=s==='green'?colors[g]:colors[s];c.fillRect(x(f.time_s),yy,Math.max(1,x(run.frames[i+1].time_s)-x(f.time_s)),23);}}c.strokeStyle='#173b2e';c.beginPath();c.moveTo(x(time),12);c.lineTo(x(time),95);c.stroke();c.fillStyle='#65756f';c.fillText('0 s',l,117);c.fillText(DATA.config.duration_s+' s',r-35,117);}
-function render(){const fixed=run('fixed'),candidate=run($('candidate').value);$('scrub').value=time;$('time').textContent=Math.floor(time)+' / '+DATA.config.duration_s+' s';$('candidate-title').textContent=labels[$('candidate').value];for(const [id,r] of [['fixed',fixed],['candidate',candidate]]){const f=frame(r);road(id+'-road',f);$(id+'-phase').textContent=phaseName(f.phase);$(id+'-q').textContent=Object.values(f.queues).reduce((a,b)=>a+b,0)+' / '+Object.values(f.external).reduce((a,b)=>a+b,0);$(id+'-exits').textContent=f.exited_vehicles;$(id+'-delay').textContent=(r.metrics.total_delay_vehicle_s/60).toFixed(1);const log=r.control_log.filter(v=>v.issue_time_s<=f.time_s).at(-1);$(id+'-decision').textContent=(reasons[log.reason]||log.reason)+'. Estimated queues: N–S '+log.ns_estimated_queue_veh+' veh; E–W '+log.ew_estimated_queue_veh+' veh. '+(f.fallback?'Fallback is active. ':'')+' Data quality: '+Object.entries(f.quality).map(([a,q])=>a+' '+q).join(' / ');}
-let saving=fixed.metrics.total_delay_vehicle_s-candidate.metrics.total_delay_vehicle_s,pct=fixed.metrics.total_delay_vehicle_s?saving/fixed.metrics.total_delay_vehicle_s*100:0;$('summary').textContent='Replay seed '+DATA.seed+' · Full-run delay versus fixed-time: '+(saving>=0?'reduced by ':'increased by ')+Math.abs(pct).toFixed(1)+'% ('+Math.abs(saving/60).toFixed(1)+' veh·min). Responsive-control residual: road queue '+candidate.metrics.residual_queue_veh+' veh; external queue '+candidate.metrics.residual_external_veh+' veh. ';
-const sum=f=>Object.values(f.queues).reduce((a,b)=>a+b,0)+Object.values(f.external).reduce((a,b)=>a+b,0);plot('queues',[{values:fixed.frames.map(f=>[f.time_s,sum(f)]),color:'#216b57'},{values:candidate.frames.map(f=>[f.time_s,sum(f)]),color:'#cf793b'}]);const approach=$('approach').value;plot('estimate',[{values:candidate.frames.map(f=>[f.time_s,f.queues[approach]]),color:'#216b57'},{values:candidate.frames.map(f=>[f.time_s,f.estimates[approach]]),color:'#cf793b',dash:true}]);timeline(fixed,candidate);}
-for(const row of DATA.summary){const tr=document.createElement('tr');for(const value of [DATA.scenarios[row.scenario].label+' / '+labels[row.controller],(row.mean_total_delay_vehicle_s/60).toFixed(1),row.mean_exited_vehicles.toFixed(1),row.mean_residual_external_veh.toFixed(1),(row.mean_paired_delay_saving_vehicle_s/60).toFixed(1)]){const td=document.createElement('td');td.textContent=value;tr.appendChild(td);}$('comparison').appendChild(tr);}
-$('footer').textContent='Project-built intersection prototype; not yet integrated with the course scaffold. One through lane per approach; no turns, pedestrians, spatial spillback, or collision model. Parameters are uncalibrated. Forecasts are advisory and do not drive control. The table summarizes '+DATA.summary[0].seeds+' seeds; this is not a statistical significance claim.';
-$('scenario').onchange=render;$('candidate').onchange=render;$('approach').onchange=render;$('scrub').oninput=()=>{time=+$('scrub').value;render();};$('reset').onclick=()=>{time=0;playing=false;$('play').textContent='Play';render();};$('play').onclick=()=>{playing=!playing;if(time>=DATA.config.duration_s)time=0;$('play').textContent=playing?'Pause':'Play';last=0;};$('event').onclick=()=>{const s=DATA.scenarios[$('scenario').value];time=s.faults?.[0]?.start_s||s.demand[1]?.start_s||0;render();};window.addEventListener('resize',render);function tick(now){if(playing&&last){time=Math.min(DATA.config.duration_s,time+(now-last)/1000*+$('speed').value);render();if(time>=DATA.config.duration_s){playing=false;$('play').textContent='Play';}}last=now;requestAnimationFrame(tick);}render();requestAnimationFrame(tick);
+const DATA = __SIGNAL_DATA__;
+const C = DATA.config, APP = DATA.approaches, S = C.approach_length_m, BOX = C.box_length_m, END = S + BOX + C.exit_length_m, ADV = S - C.advance_detector_m;
+const GROUP = {N: 'NS', S: 'NS', E: 'EW', W: 'EW'};
+const COLORS = {NS: '#46ba97', EW: '#edaa65'};
+const LINE = {N: '#1b8a63', S: '#46ba97', E: '#c96a1e', W: '#edaa65'};
+const MODE_LABEL = {fixed: 'Fixed time (Webster)', actuated: 'Vehicle actuated (gap-out)', adaptive: 'Queue + forecast pressure', adaptive_no_forecast: 'Pressure without forecast (ablation)'};
+const $ = id => document.getElementById(id);
+let scenario, mode, run, t = 0, playing = false, lastTick = null;
+
+function setup() {
+  for (const k of Object.keys(DATA.scenarios)) $('scenario').add(new Option(DATA.scenarios[k].label, k));
+  for (const m of DATA.modes) $('mode').add(new Option(MODE_LABEL[m] || m, m));
+  $('scenario').value = Object.keys(DATA.scenarios)[0];
+  $('mode').value = DATA.modes.includes('adaptive') ? 'adaptive' : DATA.modes[0];
+  $('scrub').max = C.duration_s;
+  $('scenario').onchange = $('mode').onchange = () => { select(); update(); };
+  $('fcApproach').onchange = () => drawForecast();
+  $('scrub').oninput = () => { t = +$('scrub').value; update(); };
+  $('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; lastTick = null; if (playing) requestAnimationFrame(tick); };
+  $('reset').onclick = () => { t = 0; update(); };
+  $('jumpShift').onclick = () => { const d = DATA.scenarios[scenario].demand; t = d.length > 1 ? Math.max(0, d[1].start_s - 20) : 0; update(); };
+  window.onresize = () => update();
+  select();
+  t = 60;
+  update();
+}
+
+function select() {
+  scenario = $('scenario').value; mode = $('mode').value;
+  run = DATA.runs[`${scenario}/${mode}`];
+  const plan = DATA.plan;
+  $('plannote').textContent = `Webster plan: green NS ${plan.green_s.NS} s / EW ${plan.green_s.EW} s, cycle ${plan.cycle_s} s`;
+  $('footnote').textContent = `Scenario ${scenario} · controller ${mode} · demand table ${run.metrics.demand_id} · model ${run.metrics.model_version} · controller ${run.metrics.controller_version}`;
+  compareTable();
+}
+
+function frameAt(time) {
+  const frames = run.frames, k = Math.min(frames.length - 1, Math.max(0, Math.floor(time)));
+  return [frames[k], frames[Math.min(frames.length - 1, k + 1)], time - k];
+}
+
+// ------------------------------------------------------------------ replay drawing
+
+function canvasPoint(approach, x) {
+  // Returns [px, py, dirx, diry] for travel distance x along the approach (800 x 800 canvas, 1 px/m).
+  const c = 400, half = BOX / 2, lane = 6;
+  if (approach === 'N') return [c - lane, c - half - (S - x), 0, 1];
+  if (approach === 'S') return [c + lane, c + half + (S - x), 0, -1];
+  if (approach === 'E') return [c + half + (S - x), c - lane, -1, 0];
+  return [c - half - (S - x), c + lane, 1, 0];
+}
+
+function drawRoad() {
+  const canvas = $('road'), ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height, c = 400, half = BOX / 2;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#132a2b'; ctx.fillRect(0, 0, W, H);
+  // Roads: each strip spans both approaches; the opposite exit leg lies inside the strip.
+  ctx.fillStyle = '#2b4344';
+  ctx.fillRect(c - 14, c - half - S, 28, 2 * (S + half));
+  ctx.fillRect(c - half - S, c - 14, 2 * (S + half), 28);
+  // Conflict box
+  ctx.fillStyle = '#3a5556'; ctx.fillRect(c - half, c - half, BOX, BOX);
+  // Centre lines
+  ctx.strokeStyle = '#6f8b86'; ctx.setLineDash([6, 8]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(c, c - half - S); ctx.lineTo(c, c - half); ctx.moveTo(c, c + half); ctx.lineTo(c, c + half + S);
+  ctx.moveTo(c - half - S, c); ctx.lineTo(c - half, c); ctx.moveTo(c + half, c); ctx.lineTo(c + half + S, c); ctx.stroke(); ctx.setLineDash([]);
+  const [f0, f1, a] = frameAt(t);
+  const [group, stage] = f0.signal;
+  // Stop lines, signal heads, advance loops, boundary queues
+  for (const ap of APP) {
+    const [sx, sy, dx, dy] = canvasPoint(ap, S);
+    const phase = GROUP[ap] === group ? (stage === 'green' ? 'green' : stage === 'yellow' ? 'yellow' : 'red') : 'red';
+    ctx.strokeStyle = '#e8eee9'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(sx - 6 * dy, sy - 6 * dx); ctx.lineTo(sx + 6 * dy, sy + 6 * dx); ctx.stroke();
+    ctx.fillStyle = phase === 'green' ? '#2e9e6d' : phase === 'yellow' ? '#e3c13a' : '#c0392b';
+    const side = (ap === 'N' || ap === 'E') ? -1 : 1;           // kerb side of the single lane
+    const hx = sx - 10 * dx + (dy ? side * 16 : 0), hy = sy - 10 * dy + (dx ? side * 16 : 0);
+    ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI * 2); ctx.fill();
+    const [ax, ay] = canvasPoint(ap, ADV);
+    ctx.strokeStyle = '#8fb5ad'; ctx.lineWidth = 1; ctx.strokeRect(ax - 3, ay - 3, 6, 6);
+    const [bx, by] = canvasPoint(ap, 0);
+    const waiting = f0.boundary[APP.indexOf(ap)];
+    ctx.fillStyle = '#b9d1c9'; ctx.font = '12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lx = bx - 30 * dx + (dy ? side * 34 : 0), ly = by - 30 * dy + (dx ? side * 34 : 0);
+    ctx.fillText(`${ap}${waiting ? ` · ${waiting} waiting` : ''}`, lx, ly);
+  }
+  // Vehicles (interpolated)
+  const next = new Map(f1.vehicles.map(v => [v[0], v]));
+  for (const v of f0.vehicles) {            // [id, approach index, position (dm), committed]
+    const [id, ai, x10, committed] = v, n = next.get(id), x0 = x10 / 10;
+    const x = n && n[1] === ai && n[2] >= x10 ? x0 + (n[2] / 10 - x0) * a : x0;
+    const ap = APP[ai];
+    const [px, py, dx, dy] = canvasPoint(ap, x);
+    ctx.save(); ctx.translate(px, py); ctx.rotate(Math.atan2(dy, dx));
+    ctx.fillStyle = COLORS[GROUP[ap]];
+    ctx.fillRect(-5, -3.2, 5, 6.4);
+    if (committed) { ctx.strokeStyle = '#f4e04d'; ctx.lineWidth = 1.5; ctx.strokeRect(-5.5, -3.7, 6, 7.4); }
+    ctx.restore();
+  }
+  ctx.fillStyle = '#b9d1c9'; ctx.font = '12px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(`t = ${t.toFixed(0)} s · ${group} ${stage.replace('_', '-')} ${f0.signal[2]} s`, 14, 22);
+  ctx.textAlign = 'right'; ctx.fillText(`stopped: N ${f0.stopped[0]} · S ${f0.stopped[1]} · E ${f0.stopped[2]} · W ${f0.stopped[3]}`, W - 14, 22);
+}
+
+// ------------------------------------------------------------------ plots
+
+function axes(canvas) {
+  const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, w, h);
+  return {ctx, w, h, left: 42, right: 12, top: 10, bottom: 24};
+}
+
+function grid(A, xmax, ymax, ylabel) {
+  const {ctx, w, h, left, right, top, bottom} = A;
+  const X = x => left + (w - left - right) * x / xmax, Y = y => h - bottom - (h - top - bottom) * y / ymax;
+  ctx.strokeStyle = '#edf0eb'; ctx.fillStyle = '#677671'; ctx.font = '10px system-ui'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  const step = ymax > 40 ? 20 : ymax > 16 ? 5 : ymax > 8 ? 2 : 1;
+  for (let y = 0; y <= ymax; y += step) { ctx.beginPath(); ctx.moveTo(left, Y(y)); ctx.lineTo(w - right, Y(y)); ctx.stroke(); ctx.fillText(y, left - 5, Y(y)); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let x = 0; x <= xmax; x += 100) ctx.fillText(x, X(x), h - bottom + 5);
+  ctx.save(); ctx.translate(10, (top + h - bottom) / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = 'middle'; ctx.fillText(ylabel, 0, 0); ctx.restore();
+  // demand changes
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = '#9aa7a0';
+  for (const p of DATA.scenarios[scenario].demand.slice(1)) { ctx.beginPath(); ctx.moveTo(X(p.start_s), top); ctx.lineTo(X(p.start_s), h - bottom); ctx.stroke(); }
+  ctx.setLineDash([]);
+  return {X, Y};
+}
+
+function shadeFallback(A, X) {
+  const {ctx, top, h, bottom} = A;
+  ctx.fillStyle = 'rgba(217,130,67,.12)';
+  let start = null;
+  for (const f of run.frames) {
+    if (f.fallback && start === null) start = f.time;
+    if (!f.fallback && start !== null) { ctx.fillRect(X(start), top, X(f.time) - X(start), h - top - bottom); start = null; }
+  }
+  if (start !== null) ctx.fillRect(X(start), top, X(C.duration_s) - X(start), h - top - bottom);
+}
+
+function cursor(A, X) {
+  const {ctx, top, h, bottom} = A;
+  ctx.strokeStyle = '#18302d'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(t), top); ctx.lineTo(X(t), h - bottom); ctx.stroke();
+}
+
+function line(A, X, Y, points, color, dashed) {
+  const ctx = A.ctx; ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash(dashed ? [4, 4] : []);
+  ctx.beginPath(); let pen = false;
+  for (const [x, y] of points) { if (y === null || y === undefined) { pen = false; continue; } if (!pen) { ctx.moveTo(X(x), Y(y)); pen = true; } else ctx.lineTo(X(x), Y(y)); }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawPhases() {
+  const A = axes($('phases')), {ctx, w, h, left, right, top, bottom} = A;
+  const X = x => left + (w - left - right) * x / C.duration_s;
+  const rows = {NS: top + 8, EW: top + 8 + (h - top - bottom - 8) / 2};
+  const rh = (h - top - bottom - 16) / 2 - 6;
+  ctx.font = '10px system-ui'; ctx.fillStyle = '#677671'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillText('N–S', left - 5, rows.NS + rh / 2); ctx.fillText('E–W', left - 5, rows.EW + rh / 2);
+  for (const g of ['NS', 'EW']) { ctx.fillStyle = '#c0392b'; ctx.fillRect(X(0), rows[g], X(C.duration_s) - X(0), rh); }
+  for (const p of run.phases) {
+    const end = p.end_s === undefined ? C.duration_s : p.end_s;
+    if (p.stage === 'all_red') continue;
+    ctx.fillStyle = p.stage === 'green' ? '#2e9e6d' : '#e3c13a';
+    ctx.fillRect(X(p.start_s), rows[p.group], Math.max(1, X(end) - X(p.start_s)), rh);
+  }
+  shadeFallback(A, X);
+  ctx.setLineDash([3, 4]); ctx.strokeStyle = '#9aa7a0';
+  for (const p of DATA.scenarios[scenario].demand.slice(1)) { ctx.beginPath(); ctx.moveTo(X(p.start_s), top); ctx.lineTo(X(p.start_s), h - bottom); ctx.stroke(); }
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#677671'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let x = 0; x <= C.duration_s; x += 100) ctx.fillText(x, X(x), h - bottom + 5);
+  cursor(A, X);
+}
+
+function drawQueues() {
+  const A = axes($('queues'));
+  const frames = run.frames;
+  let ymax = 4;
+  for (const f of frames) for (let i = 0; i < 4; i++) ymax = Math.max(ymax, f.zone_truth[i], f.estimate[i] || 0, f.boundary[i]);
+  ymax = Math.ceil(ymax / 2) * 2;
+  const {X, Y} = grid(A, C.duration_s, ymax, 'vehicles');
+  shadeFallback(A, X);
+  for (let i = 0; i < 4; i++) {
+    const ap = APP[i];
+    line(A, X, Y, frames.map(f => [f.time, f.boundary[i]]), 'rgba(103,118,113,.45)', false);
+    line(A, X, Y, frames.map(f => [f.time, f.zone_truth[i]]), LINE[ap], false);
+    line(A, X, Y, frames.map(f => [f.time, f.estimate[i]]), LINE[ap], true);
+  }
+  cursor(A, X);
+  const legend = APP.map(ap => `<span><i class="dot" style="background:${LINE[ap]}"></i>${ap}</span>`).join('');
+  $('qnote').innerHTML = `Zone = ${C.advance_detector_m} m upstream of the stop line (≈ ${Math.floor(C.advance_detector_m / 7)} vehicles at jam). Lines: ${legend}`;
+}
+
+function drawForecast() {
+  const A = axes($('forecast'));
+  const ap = $('fcApproach').value;
+  const rows = run.forecasts.filter(r => r.segment_id === ap && r.evaluation_period);
+  const ema = rows.filter(r => r.method === 'ema'), ma = rows.filter(r => r.method === 'moving_average');
+  let ymax = 4;
+  for (const r of rows) ymax = Math.max(ymax, r.predicted_value, r.actual_value);
+  ymax = Math.ceil(ymax);
+  const {X, Y} = grid(A, C.duration_s, ymax, 'veh / 30 s');
+  shadeFallback(A, X);
+  line(A, X, Y, ema.map(r => [r.issue_time_s, r.actual_value]), '#18302d', false);
+  line(A, X, Y, ema.map(r => [r.issue_time_s, r.predicted_value]), '#2a78d6', false);
+  line(A, X, Y, ma.map(r => [r.issue_time_s, r.predicted_value]), '#d98243', false);
+  cursor(A, X);
+  const mae = m => { const v = rows.filter(r => r.method === m); return v.length ? (v.reduce((s, r) => s + r.absolute_error, 0) / v.length).toFixed(2) : '–'; };
+  $('fcnote').textContent = `Approach ${ap}, evaluation from ${C.control.evaluation_start_s} s, identical issue times and ${C.control.forecast_horizon_s} s horizon. MAE: EMA ${mae('ema')} veh, moving average ${mae('moving_average')} veh. Forecasts pause while reports are missing or stale (shaded).`;
+}
+
+// ------------------------------------------------------------------ tables
+
+function commandAt(time) {
+  const log = run.control_log;
+  let lo = 0, hi = log.length - 1, best = log[0];
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (log[mid].issue_time_s <= time + 1e-9) { best = log[mid]; lo = mid + 1; } else hi = mid - 1; }
+  return best;
+}
+
+function fmt(v, d = 1) { return v === null || v === undefined ? '–' : typeof v === 'number' ? v.toFixed(d) : v; }
+
+function traceTable() {
+  const f = frameAt(t)[0], cmd = commandAt(t);
+  const rows = [
+    ['Observe', 'loop quality N/S/E/W', cmd.quality_flags, 'reports every ' + C.detector_interval_s + ' s'],
+    ['Estimate', 'zone queue N/S/E/W (veh)', f.estimate.map(v => fmt(v, 0)).join(' / '), 'truth ' + f.zone_truth.join(' / ')],
+    ['Predict', 'arrivals next 30 s, served / opposing', `${fmt(cmd.current_forecast_veh)} / ${fmt(cmd.opposing_forecast_veh)}`, mode === 'adaptive' ? 'enters the pressure rule' : mode === 'adaptive_no_forecast' ? 'computed, set to zero in the rule' : 'advisory only'],
+    ['Decide', 'reason', cmd.reason, `served ${fmt(cmd.current_queue_est_veh, 0)} vs opposing ${fmt(cmd.opposing_queue_est_veh, 0)} veh`],
+    ['Act', 'phase state', `${cmd.value.replace('_', ' ')} · ${fmt(cmd.phase_elapsed_s, 0)} s`, `min ${C.min_green_s} s · max ${C.max_green_s} s · fixed ${cmd.fixed_green_s} s${cmd.fallback ? ' · FALLBACK' : ''}`],
+    ['Evaluate', 'stopped queue N/S/E/W (veh)', f.stopped.join(' / '), `boundary ${f.boundary.join(' / ')}`],
+  ];
+  $('trace').innerHTML = '<tr><th>Stage</th><th>Quantity</th><th>Value</th><th>Context</th></tr>' +
+    rows.map(r => `<tr><td>${r[0]}</td><td class="small">${r[1]}</td><td>${r[2]}</td><td class="small">${r[3]}</td></tr>`).join('');
+  $('reasonbadge').textContent = cmd.reason.replace(/_/g, ' ');
+  $('reasonbadge').className = 'badge' + (cmd.fallback ? ' warn' : '');
+}
+
+function compareTable() {
+  const rows = DATA.summary.filter(r => r.scenario === scenario);
+  $('compare').innerHTML = '<tr><th>Controller</th><th class="num">Exits</th><th class="num">Delay (veh·min)</th><th class="num">Saving vs fixed</th><th class="num">Residual road / boundary</th><th class="num">Greens</th><th class="num">Fallback (s)</th><th class="num">Est. MAE</th><th class="num">Red runs / conflicts</th></tr>' +
+    rows.map(r => `<tr class="${r.controller === mode ? 'current' : ''}"><td>${MODE_LABEL[r.controller] || r.controller}</td><td class="num">${r.exited_vehicles}</td><td class="num">${(r.total_delay_vehicle_s / 60).toFixed(1)}</td><td class="num">${(r.delay_saving_vs_fixed_vehicle_s / 60).toFixed(1)}</td><td class="num">${r.remaining_on_road} / ${r.remaining_boundary_queue}</td><td class="num">${r.green_phases}</td><td class="num">${r.fallback_time_s}</td><td class="num">${fmt(r.queue_estimate_mae_mean_veh, 2)}</td><td class="num">${r.red_light_runs} / ${r.conflict_box_steps_with_both_groups}</td></tr>`).join('');
+}
+
+// ------------------------------------------------------------------ update loop
+
+function update() {
+  t = Math.max(0, Math.min(C.duration_s, t));
+  $('scrub').value = t;
+  $('time').textContent = `${t.toFixed(0)} s / ${C.duration_s} s`;
+  const f = frameAt(t)[0], m = run.metrics;
+  $('signal').textContent = `${f.signal[0]} ${f.signal[1].replace('_', '-')}`;
+  $('signalsub').textContent = `${f.signal[2]} s in phase · ${f.reason ? f.reason.replace(/_/g, ' ') : ''}${f.fallback ? ' · fallback' : ''}`;
+  $('n').textContent = f.vehicles.length;
+  $('exits').textContent = f.exits;
+  $('boundary').textContent = f.boundary.reduce((a, b) => a + b, 0);
+  $('delay').innerHTML = `${(m.total_delay_vehicle_s / 60).toFixed(1)} <span class="unit">veh·min</span>`;
+  const fixed = DATA.summary.find(r => r.scenario === scenario && r.controller === 'fixed');
+  const saving = fixed ? (fixed.total_delay_vehicle_s - m.total_delay_vehicle_s) / 60 : 0;
+  $('saving').textContent = mode === 'fixed' ? 'Webster baseline' : `${saving >= 0 ? '−' : '+'}${Math.abs(saving).toFixed(1)} veh·min vs fixed`;
+  $('throughput').innerHTML = `${m.throughput_vph.toFixed(0)} <span class="unit">veh/h</span>`;
+  $('greens').textContent = m.green_phases; $('fallback').textContent = m.fallback_time_s;
+  drawRoad(); drawPhases(); drawQueues(); drawForecast(); traceTable();
+}
+
+function tick(now) {
+  if (!playing) return;
+  if (lastTick !== null) t += (now - lastTick) / 1000 * (+$('rate').value);
+  lastTick = now;
+  if (t >= C.duration_s) { t = C.duration_s; playing = false; $('play').textContent = 'Play'; }
+  update();
+  if (playing) requestAnimationFrame(tick);
+}
+
+setup();
 </script></body></html>

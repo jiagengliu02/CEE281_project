@@ -151,29 +151,29 @@
         },
         "exits": {
           "samples": 16,
-          "mae_veh": 2.208333333333333
+          "mae_veh": 2.2083333333333335
         }
       },
       "ema": {
         "main_arrivals": {
           "samples": 16,
-          "mae_veh": 2.6758517540147646
+          "mae_veh": 2.6758517540147655
         },
         "main_entries": {
           "samples": 16,
-          "mae_veh": 2.6758517540147646
+          "mae_veh": 2.6758517540147655
         },
         "ramp_arrivals": {
           "samples": 16,
-          "mae_veh": 0.44559621333730876
+          "mae_veh": 0.4455962133373088
         },
         "ramp_entries": {
           "samples": 16,
-          "mae_veh": 0.46430907571583935
+          "mae_veh": 0.46430907571583946
         },
         "exits": {
           "samples": 16,
-          "mae_veh": 2.6419687169306667
+          "mae_veh": 2.641968716930667
         }
       }
     },

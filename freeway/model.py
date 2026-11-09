@@ -400,7 +400,7 @@ class FreewaySimulation:
         metrics = {
             'mode': self.mode,
             'model_version': 'idm-freeway-ramp-motion-3.1' if self.c.get('taper_start_m') is not None else 'idm-freeway-2.0',
-            'controller_version': 'forecast-inventory-meter-1.0',
+            'controller_version': 'forecast-inventory-meter-1.0' + ('' if self.c['tmc'].get('use_forecast', True) else '-noforecast'),
             'forecast': scores,
             'fallback_time_s': round(self.fallback_time, 3),
             'road_estimate_mae_veh': (sum(abs(f['estimate']['road_vehicles'] - len(f['vehicles']))
@@ -454,9 +454,10 @@ def validate(c):
             raise ValueError(name + ' must be a positive multiple of dt_s')
     if abs(c['duration_s'] / c['detector_interval_s'] - round(c['duration_s'] / c['detector_interval_s'])) > 1e-6:
         raise ValueError('duration must cover complete detector intervals')
-    if not (0 < c['merge_position_m'] < c['merge_anticipation_m'] < c['closure_start_m']
-            < c['closure_end_m'] < c['road_length_m']):
-        raise ValueError('Require ramp < merge anticipation < closure start < closure end < road end')
+    if not (0 < c['merge_anticipation_m'] < c['closure_start_m'] < c['closure_end_m'] < c['road_length_m']):
+        raise ValueError('Require merge anticipation < closure start < closure end < road end')
+    if not 0 < c['merge_position_m'] < c['closure_start_m']:
+        raise ValueError('Ramp must join upstream of the closure start')
     if c['closed_lane'] != 0:
         raise ValueError('This prototype implements leftmost-lane closure only')
 

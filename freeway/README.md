@@ -107,6 +107,11 @@ Paths below are relative to the project root. Run commands from that root.
 | `freeway/verify.py` | Independent physical checks and timestep sensitivity |
 | `freeway/configs/default.json` | Default road, ramp, work-zone, and demand settings |
 | `freeway/configs/heavy_demand.json` | Higher-demand configuration |
+| `freeway/configs/homogeneous_drivers.json` | Same demand, all driver standard deviations set to 0 (heterogeneity experiment) |
+| `freeway/configs/no_forecast.json` | Same adaptive rule with `tmc.use_forecast: false`: every forecast count is zero (ablation) |
+| `freeway/configs/ramp_heavy.json` | Peak demand 2400 mainline + 900 ramp veh/h (metering-favourable demand) |
+| `freeway/configs/merge_at_taper.json` | Ramp joins at 500 m, the taper start, instead of 250 m |
+| `freeway/configs/merge_at_taper_ramp_heavy.json` | Both changes above combined |
 | `freeway/viewer_template.html.in` | Offline replay and plots |
 | `results/freeway/` | Generated results; separate from source code |
 

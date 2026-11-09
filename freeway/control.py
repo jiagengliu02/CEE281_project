@@ -26,6 +26,9 @@ class RampController:
         else:
             h = self.c['forecast_horizon_s']
             counts = forecast['counts']
+            if not self.c.get('use_forecast', True):
+                # Ablation: same rule with every predicted count set to zero.
+                counts = {k: 0 for k in counts}
             projected = max(0, estimate['road_vehicles'] + counts['main_entries'] - counts['exits'])
             rate = (self.c['target_road_vehicles'] - projected) / h
             rate = max(1 / self.c['max_release_interval_s'],

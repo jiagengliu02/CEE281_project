@@ -1,129 +1,131 @@
-# CEE281 Signal-Control Branch: Implementation and Experiments
+# Signalized Intersection Environment (Final Pathway B)
 
-## Run and visualize
+This branch puts the freeway's IDM vehicles on four single-lane approaches of an isolated intersection and closes the loop with physical loop detectors, a queue estimator, an arrival forecast and three signal controllers. It reuses `freeway/behavior.py` (IDM, ballistic motion, vehicle state) and `freeway/drivers.py` (reproducible heterogeneous drivers) unchanged; everything intersection-specific lives here.
 
-Python 3.10+; standard library only. The freeway remains independently runnable.
-
-```bash
-cd /Users/liujiageng/Desktop/CEE281/project
-python3 run.py intersection
-python3 run.py check intersection
-open results/intersection/viewer.html
-```
-
-Alternatively open `view.html` and choose Signalized intersection. The viewer is self-contained and works offline in Safari or Chrome. It compares fixed-time and responsive control at the same replay time, with four scenarios, phase timelines, queue truth versus estimates, and a multi-seed comparison table. Vehicle blocks illustrate queue counts; they are not IDM spatial trajectories.
-
-For a smaller run:
+Run from the project root (Python 3.10+, standard library only):
 
 ```bash
-python3 run.py intersection --scenario directional_shift --seed 11 --output results/intersection_demo
+python3 run.py intersection                      # 4 scenarios x 4 controllers -> results/intersection/
+python3 run.py check intersection                # unit tests + independent audits -> verification.json
+python3 run.py intersection --scenario heavy     # one scenario, same output folder
+open results/intersection/viewer.html            # or intersection.html / view.html in the project root
 ```
 
-Copy `intersection/configs/default.json` before making custom changes and pass the copy using `--config`. A run replaces matching files in its output directory. The default experiment has four scenarios, three controllers, and three seeds: 36 runs.
+The viewer replays any scenario/controller pair: top-down intersection with signal heads, advance loops and committed vehicles; phase timeline; true vs estimated zone queue and boundary queue; forecast vs actual; a six-stage decision trace at the current time; and the controller comparison table for the scenario.
 
-## Research question and scope
+## Design question and scope
 
-For an isolated intersection with four single-lane through approaches, can signal timing based on estimated queues reduce waiting delay relative to a justified fixed-time plan? What happens under directional demand shifts, detector faults, and full approach storage?
+*Can a detector-based actuated or queue-responsive controller reduce total delay relative to a justified fixed-time plan when demand changes, and what happens when detectors fail or storage fills?*
 
-This is a project-built intersection prototype. No instructor-supplied intersection scaffold was present in the directory, so this implementation does not claim to use it. Once the scaffold is available, first adapt arrivals, admission, and discharge in `intersection/model.py`, preserving observation and control interfaces where possible. Recheck geometry, lane layout, and phase compatibility before repeating validation.
+Scope follows the project guide: a small intersection, two through-only phases (N–S and E–W), no turns, no pedestrians (so no pedestrian benefit is claimed), no network. The instructor scaffold had not been supplied when this was written; the geometry and intersection mechanics are therefore project-defined and documented below so they can be swapped for the scaffold's.
 
-The original `freeway/model.py` is a multilane IDM work-zone model. This branch uses the simpler queue model permitted by the guide, independently of the freeway dynamics. It follows the same seconds-based timing, interval observations, command timestamps, CSV/JSON outputs, and offline HTML approach. Completing this prototype does not complete all shared-foundation course requirements.
+## Geometry, vehicles and the stop line
 
-## Modules and reading order
-
-Paths are relative to the project root. `run.py` is the only command-line entry point; branch modules are imported through it.
-
-| File | Responsibility | Start with |
+| Element | Value | Note |
 | --- | --- | --- |
-| `intersection/configs/default.json` | Demand, timing, storage, control, and observation parameters | `scenarios`, `fixed_green_s` |
-| `intersection/model.py` | Arrivals, finite queues, stop-line service, truth, and metrics | `make_arrivals()`, `IntersectionSimulation.run()` |
-| `intersection/detector.py` | Interval entry/stop-line counts and injected missing/delayed faults | `StopLineDetectors.report()` |
-| `intersection/observation.py` | Queue estimation and arrival forecasting from detector reports | `receive()`, `estimates()`, `predict()` |
-| `intersection/control.py` | Bounded phase state machine and three policies | `SignalController.update()` |
-| `intersection/run.py` | Paired experiments, export, and aggregation | `run_experiments()` |
-| `intersection/verify.py` | Independent count, analytic, timing, and causality checks | `audit()`, saturated-queue test |
-| `intersection/viewer_template.html.in` | Offline replay and plots | Controls and drawing functions |
+| Approach | 300 m single lane per direction, entry at x = 0, stop line at x = 300 m | Finite storage ≈ 40 vehicles at jam; excess demand waits at the boundary and is counted as unmet demand |
+| Conflict box | 20 m square | Vehicles of both groups inside the box at the same time is a logged and asserted violation |
+| Exit leg | 60 m | Vehicles leave the model 380 m from the entry |
+| Advance loop | 100 m upstream of the stop line | Reports counts and crossing speeds every 5 s |
+| Stop-line loop | at the stop line | Same report format |
+| Vehicles | freeway IDM; 5 m long; per-driver desired speed 14 ± 1.5 m/s (10–18), T 1.5 s, a 1.2 m/s², b 2 m/s², s0 2 m | Same driver population as the freeway except the urban desired speed |
 
-Data flow: demand events → road/external queues → entry and stop-line counts → queue estimate → control decision → green/yellow/all-red state → discharge. Future arrivals, true queues, and vehicle histories belong to the simulator/evaluation layer. The controller receives estimates and quality flags only.
+Car following is the unmodified freeway IDM with the ballistic update. The stop line is handled by a kinematic rule rather than an IDM obstacle: a driver who must stop applies the constant deceleration that ends `min_gap` before the line, and the applied acceleration is `min(IDM, stopping)`, bounded to [−6, a] m/s². The IDM reacts far too strongly to a standing obstacle that appears suddenly (it is designed for gradual approach), so the kinematic rule is a declared modelling choice, not a calibrated driver model.
 
-## Traffic model
+Yellow uses the ITE dilemma-zone rule: a driver stops if the required deceleration is at most 3.05 m/s² (10 ft/s²), otherwise the vehicle is *committed* and clears during yellow/all-red. Commitment is re-evaluated every step, so a committed vehicle slowed by its leader stops if it still can (up to emergency braking on red). Every stop-line crossing is logged with the phase seen by that approach: crossings while the opposing group is green or yellow are **red-light runs and must be zero**; crossings during all-red are reported separately.
 
-Each approach has storage for 35 vehicles. When full, additional demand remains in an unlimited external FIFO queue and continues accumulating delay. External queues represent unmet admission demand; their spatial propagation into an upstream network is not modeled.
+Clearance intervals are derived from the model's speeds and checked in `verify.py`: yellow 3.5 s ≈ 1 + v85/(2·3.05) with v85 = 15.6 m/s (drivers here have no reaction time, so the 1 s term is a margin); all-red 2.5 s ≥ (box + vehicle length)/v15 = 25/12.45 = 2.0 s.
 
-Each vehicle records demand arrival, admission, and stop-line departure times. Admission places it directly in the approach queue, with no free-flow travel segment. Speed and spacing are not modeled.
+## Arrivals
 
-Each green begins with a 2 s startup loss. Under continuous queuing, each served approach releases one vehicle every 2 s, equivalent to a saturation flow of 1800 veh/h. Unused service opportunities do not accumulate for an instantaneous burst later. Yellow and all-red permit no new stop-line departures. These numerical values are teaching assumptions, not empirically calibrated values or recommendations for a real intersection.
+Each scenario has piecewise-constant demand per approach. Arrival headways are exponential draws from a stream seeded by `arrival_seed` and the approach, so the same arrival table serves every controller of a scenario (the `demand_id` hash is exported with each run). Uniform headways were avoided because they lock onto the signal cycle and create artificial platoons. A vehicle enters at x = 0 at `min(desired speed, speed of the last vehicle)` when the gap allows (2 m + 1 s headway); otherwise it waits at the boundary, where its delay keeps accruing.
 
-Demand follows piecewise Poisson processes with independent random streams by approach. All controllers use the same pre-generated arrival table and export the same `demand_id` hash for auditing. Processing rounds arrivals up to the simulation grid, while delay accounting retains the original demand time. The default timestep is 0.5 s; verification also uses 0.25 s.
+## Observation, estimation and prediction
 
-## Phase plan and controllers
+1. **Detect** (`observation.py`, `ApproachDetectors`): two loops per approach report `sensor_id, interval_start_s, interval_end_s, count, cumulative_count, mean_speed_mps, quality_flag` every 5 s. Reports are delivered causally; a `missing` fault drops reports, a `delay` fault postpones `available_time_s`. The controller never receives positions, true queues or future arrivals.
+2. **Estimate** (`SignalObservation.estimate`): `estimated_queue = cumulative advance crossings − cumulative stop-line crossings`, i.e. vehicles between the advance loop and the stop line, moving or stopped. It assumes an initially empty approach and recovers automatically after missing intervals because the counters are cumulative. Vehicles queued upstream of the advance loop are invisible; the zone saturates at about 13 vehicles. Quality is `unavailable` (no data yet), `missing`, `stale` (> 12 s old) or `ok`.
+3. **Predict** (`SignalObservation.forecast`): advance-loop arrivals over the next 30 s per approach, EMA (α = 0.35) against a 6-report moving-average baseline. Both methods are issued at identical times and scored against the withheld counters from 120 s onward, only when the full horizon lies inside the run. Missing or stale data suppress forecasts.
 
-The sequence is `NS_green → NS_yellow → NS_all_red → EW_green → EW_yellow → EW_all_red → NS_green`.
+Estimate MAE against the true zone count and forecast MAE per method are in each `metrics.json` and in `summary.csv`.
 
-- Compatible movements are north/south through or east/west through. Turns and pedestrians are excluded.
-- Yellow lasts 3 s and all-red 1 s. Minimum green is 10 s; maximum green is 55 s.
-- `fixed`: 30 s green in each direction group, giving a 68 s cycle. Equal green matches the symmetric development demand of 450 veh/h per approach. With startup loss, sustained capacity is about 741 veh/h per approach. This is not a globally optimal plan and is not retuned to test demand. A stronger final study could optimize cycle and green split on separate development scenarios.
-- `adaptive`: after minimum green, request a switch if the opposing estimated queue exceeds the current estimated queue by more than 3 vehicles, or if the current estimated queue is empty and opposing demand exists. Maximum green forces rotation. Every switch still passes through yellow and all-red.
-- `adaptive_no_hysteresis`: change only the switching queue-difference threshold from 3 to 0, isolating that design choice for the CEE281 ablation.
-- If any approach observation is unavailable, missing, or older than 12 s, responsive control falls back to fixed green durations without bypassing clearance. Normal response resumes when observations recover. Startup before the first report also uses fallback.
+## Controllers (`control.py`)
 
-This is a project-defined teaching policy, not a complete implementation of a standard commercial actuated controller. Maximum-green rotation prevents an approach from being denied service indefinitely under normal timing.
+All controllers share one two-phase state machine: green → yellow (3.5 s) → all-red (2.5 s) → the other group's green. Minimum green 8 s is never cut short; yellow and all-red are never skipped, including during fallback. Maximum green 60 s applies whenever an opposing call exists (estimated queue or recent arrivals on the other group); without a call the signal rests in green, as a real actuated controller does, so an approach with demand can never be starved.
 
-## Observations, estimation, and forecasting
-
-Every 5 s, each approach produces an entry/exit report. `count` means vehicles admitted to road storage; `departure_count` means vehicles crossing the stop line. Speed is not measurable and remains explicitly missing.
-
-Two cumulative counters accompany the interval counts. Starting from empty approaches, estimated road queue = cumulative admissions − cumulative departures. The estimator holds its last value between reports, so even healthy data have sampling lag. External demand waiting for admission is hidden from the controller.
-
-Missing reports have null counts. Cumulative counters allow later healthy reports to recover after a missing interval. Delayed reports cannot be used before `available_time_s`, and older reports never overwrite newer ones. Freshness is measured from the observation interval end, not the receipt time.
-
-The forecast target is **admitted arrivals over the next 30 s**, not hidden external demand; they differ when storage is full. Methods are a moving average over six reports and EMA with alpha = 0.35. Parameters are fixed in advance and not fitted on evaluation results. The first 300 s establish history/development context. Later evaluation compares identical issue times and horizons using MAE in vehicles; horizons extending beyond the run are not scored. Missing/stale data suppress new forecasts; rates spanning a report gap average over that full gap.
-
-Forecasts are advisory in this version and do not drive control. CSV outputs retain issue time, target time, eventual truth, and error. The implementation does not assume that EMA must outperform the moving-average baseline.
-
-## Scenarios and outputs
-
-1. `balanced`: 450 veh/h per approach throughout.
-2. `directional_shift`: after 300 s, north/south each receive 900 veh/h; east/west each receive 240 veh/h.
-3. `detector_fault`: the same directional shift; N reports are missing from 420–540 s; E reports are delayed by 20 s from 600–720 s. Fault selection uses the report interval end, including the start but excluding the end of the fault window.
-4. `heavy`: 1100 veh/h per approach throughout, exposing storage limits, external accumulation, and residual queues.
-
-Each `results/intersection/<scenario>/<seed>/<controller>/` contains:
-
-- `observations.csv`: detector records and availability times.
-- `estimates.csv`, `forecasts.csv`: estimates, quality, and equal-horizon forecast scoring.
-- `control_log.csv`: issue/apply times, phase, reason, fallback state, and estimated queues used in the decision.
-- `events.csv`, `vehicles.csv`: actual arrival/admission/departure events and individual accrued waits for independent audits.
-- `metrics.json`: versions, seed, demand hash, delay, throughput, approach queues, service imbalance, and forecast errors.
-
-The top-level output includes the configuration copy, `summary.csv`, `experiment_report.md`, `verification.json`, `data.json`, and `viewer.html`. Replay shows the first seed; the table averages all seeds, so their numbers can differ.
-
-## Metrics and verification
-
-Accrued delay for each vehicle is `min(departure time, simulation end) - original demand arrival time`. The total includes departed vehicles, vehicles still on the approach, and vehicles waiting outside. It is point-queue waiting time, not complete HCM control delay including deceleration and acceleration.
-
-Approach mean delay divides by all generated vehicles and measures waiting accrued by the analysis endpoint, rather than eventual completed-trip delay. Service imbalance is the range of these approach means. There is no extra clearance tail; residual queues are reported separately. Throughput is departures divided by the full analysis duration.
-
-The 11 test methods cover:
-
-- Conservation, FIFO ordering, and independent event-to-detector count audits across all four scenarios and three controllers.
-- Phase sequence, minimum/maximum green, clearance duration, green-only departures, and saturation headways.
-- An independent saturated-queue example: 50 vehicles on one approach, 14 departures within 40 s, and 1650 veh·s total delay.
-- Zero demand and complete clearing of a finite arrival pulse.
-- No early access to delayed observations; cumulative-count recovery and out-of-order report protection.
-- Correct forecast horizons and equal samples for both forecast methods.
-- Control using estimates only; changing future demand cannot change past decisions.
-- Timestep halving and rejection of invalid configurations.
-
-## Sources, AI disclosure, and remaining course work
-
-| Design basis | Source | Use and limitations |
+| Mode | Rule | Fallback |
 | --- | --- | --- |
-| Minimum/maximum green, yellow, all-red, detector response | FHWA Traffic Signal Timing Manual, Chapter 5: https://ops.fhwa.dot.gov/publications/fhwahop08024/chapter5.htm | Parameter meanings and state constraints; numerical settings are assumptions and the queue-difference policy is project-defined |
-| Detectors and actuated-control timing | FHWA Traffic Detector Handbook, Chapter 4: https://www.fhwa.dot.gov/publications/research/operations/its/06108/04.cfm | Observation/control background; no hardware simulation or copied source code |
-| Queue conservation and event accounting | Vehicle conservation and independent analytic tests | Numerical verification, not empirical calibration |
-| Python, controller, experiments, and viewer | Newly implemented with Codex assistance | No third-party implementation copied; actual checks are recorded |
+| `fixed` | Webster plan computed once from the declared design demand (450 veh/h per approach), the measured saturation flow and lost time: C0 = (1.5 L + 5)/(1 − Y), g_i ∝ y_i. Default: 44.7 s green per group, 101.4 s cycle. Never retuned to a test scenario. | none needed |
+| `actuated` | After minimum green, extend while the served approaches' advance loops reported at least one arrival in the last 5 s report (a 5 s unit extension); otherwise gap out. Max out at 60 s with an opposing call. | fixed plan while any approach report is unavailable, missing or stale |
+| `adaptive` | Pressure = estimated zone queue + forecast arrivals over 30 s, summed per group. Switch when the served group is empty and quiet, or when opposing pressure exceeds served pressure by more than 2 vehicles. | same |
+| `adaptive_no_forecast` | Identical rule with every forecast term set to zero (CEE281 ablation). | same |
 
-Students must understand and verify the model, code, parameters, and conclusions and disclose AI assistance. This document does not invent names or individual contribution records.
+Every command is logged in the guide's format (`issue_time_s, apply_time_s, actuator_id, action, value, units`) plus the reason, bounds, fallback flag and the estimates and forecasts the decision used, so any decision can be traced.
 
-The current branch provides a runnable signal prototype, comparisons, and a design-choice ablation. Before course submission: check/integrate the instructor scaffold; add individual contribution records and pre-experiment predictions; update the design record in response to feedback; complete the video observation exercise and component-exchange evidence; review the implemented shared freeway estimation, prediction, and adaptive TMC evidence; and supplement literature and independent validation as needed. This prototype is not completion of every course requirement.
+### Why the fixed plan looks long
+
+The IDM population discharges slowly: the standing-queue check measures a 2.5 s saturation headway (1440 veh/h) and a 7.2 s start-up lost time, because vehicles accelerate at ≈ 1.2 m/s² and each one waits for its leader's gap to open. With 11 s lost per phase, Webster's optimum for 450 veh/h per approach is a 101 s cycle. The configured `saturation_flow_vph` and `startup_lost_s` must stay within 10 % / 1 s of the measured values or `check intersection` fails. This is a property of the driver model, not of real intersections (typical measured start-up lost time is about 2 s).
+
+## Scenarios (`configs/default.json`)
+
+| Scenario | Demand (veh/h per approach) | Faults |
+| --- | --- | --- |
+| `balanced` | 450 on all approaches | – |
+| `directional_shift` | 450 → 700 N/S and 300 E/W from 300 to 660 s → 450 | – |
+| `detector_fault` | as directional shift | N reports missing 360–480 s; E reports delayed 20 s 540–660 s |
+| `heavy` | 800 on all approaches for 600 s, then 300 | – |
+
+All runs last 900 s with dt 0.1 s. Delay counts every vehicle from its demand arrival, including boundary waiting and unfinished trips, as total time minus distance covered at the driver's desired speed.
+
+## Results (regenerated by `python3 run.py intersection`)
+
+From `results/intersection/experiment_report.md`, delay in veh·min, saving relative to fixed:
+
+| Scenario | fixed | actuated | adaptive | adaptive_no_forecast |
+| --- | ---: | ---: | ---: | ---: |
+| balanced | 260.5 | 330.2 (−69.7) | 246.3 (+14.2) | 551.2 (−290.7) |
+| directional_shift | 469.0 | 358.3 (+110.6) | 381.8 (+87.2) | 695.6 (−226.6) |
+| detector_fault | 469.0 | 421.4 (+47.5) | 351.6 (+117.4) | 592.9 (−123.9) |
+| heavy | 1458.5 | 1426.0 (+32.5) | 1969.5 (−511.0) | 2376.9 (−918.4) |
+
+What the numbers say about this model:
+
+- **Balanced demand**: the Webster plan is hard to beat; actuation loses because gap-outs with a 5 s unit extension produce short greens, and every extra phase costs 11 s of lost time. The pressure rule gains 5 %.
+- **Directional shift**: both responsive controllers beat the fixed plan, which cannot move green to N–S (fixed capacity ≈ 564 veh/h per approach against 700 veh/h demand). The actuated controller is slightly better than the pressure rule here.
+- **Detector faults**: 238 s of fallback. The pressure rule still gains because the healthy approaches keep it adaptive outside the fault windows; the estimate MAE rises from 0.40 to 0.55 vehicles and recovers after the faults.
+- **Heavy demand**: a supported negative result. Both detector zones saturate at ≈ 13 vehicles, so the pressure comparison sees two equal, full zones and switches shortly after minimum green on forecast noise (28 greens vs 18), wasting lost time while hundreds of vehicles wait beyond the loops. The actuated controller, which only asks "are vehicles still arriving", behaves like a long fixed plan and does slightly better than Webster. A queue estimator that only sees 100 m is the wrong sensor for an oversaturated intersection; this is the design revision the final report should test (longer min green under saturation, or a saturation-aware rule).
+- **Ablation**: removing the forecast makes the pressure rule much worse everywhere (41–42 greens). The mechanism is not prediction accuracy (MAE ≈ 2.2 vehicles per 30 s for both methods, with the moving average slightly better than EMA): during green, vehicles that were queued *beyond* the advance loop start moving and cross it, so the served group's forecast rises and holds the green until the hidden queue has passed. The forecast term works as a proxy for the invisible upstream queue; without it the rule switches as soon as the visible zone drains.
+
+Red-light runs and conflict-box violations are zero in every default run; all-red crossings by committed vehicles are also zero. These are model-consistency checks, not safety claims.
+
+## Verification (`python3 run.py check intersection`)
+
+`test_signal.py` (12 small examples): queue = advance − stop-line counts; missing/recovery/staleness; delayed reports cannot be used early and never overwrite newer data; arrival tables are controller-independent; the Webster plan by hand; minimum green and clearance sequencing; actuated gap-out, max-out and rest; forecast changes the adaptive decision and the ablation does not see it; fallback runs the fixed plan without skipping clearance; a complete loop with faults scores forecasts on matched horizons; future demand cannot change past commands; zero demand.
+
+`verify.py` audits every default run from the raw logs: conservation, no overlap, no backward motion, loop counts recomputed from trajectories, stop-line crossings versus the independent phase timeline (no red runs), conflict-box occupancy never contains both groups, yellow/all-red durations exact, every green ≥ minimum, greens beyond maximum only while resting or in fallback, fixed greens equal to the plan. It also measures saturation flow and start-up lost time, checks the ITE clearance intervals, confirms fallback during and recovery after the declared faults, clears a finite pulse under every controller, keeps unmet demand at the boundary under a 2400 veh/h overload while the zone estimate saturates, and reports dt/2 sensitivity for the directional shift. Fixed control is insensitive to dt; the pressure rule is not (its thresholded decisions depend on report timing), which is reported rather than hidden.
+
+## Files
+
+| File | Responsibility |
+| --- | --- |
+| `intersection/model.py` | `IntersectionSimulation`: arrivals, boundary entry, stop-line rule, IDM motion, loops, crossings, metrics, replay frames |
+| `intersection/observation.py` | `ApproachDetectors` (reports, faults, causal delivery), `SignalObservation` (estimates, forecasts) |
+| `intersection/control.py` | `webster_plan`, `SignalState`, `SignalController` (fixed / actuated / adaptive / ablation) |
+| `intersection/run.py` | Scenario × controller experiments, CSV/JSON export, summary, report, viewer |
+| `intersection/test_signal.py` | Small independent examples for the pipeline and controllers |
+| `intersection/verify.py` | Physical and log audits; writes `results/intersection/verification.json` |
+| `intersection/viewer_template.html.in` | Offline replay and plots |
+| `results/intersection/<scenario>/<controller>/` | `traces.csv` (0.5 s), `crossings.csv`, `observations.csv`, `estimates.csv`, `forecasts.csv`, `control_log.csv`, `phases.csv`, `arrivals.csv`, `drivers.csv`, `metrics.json` |
+
+## Sources and AI disclosure
+
+| Design choice | Basis |
+| --- | --- |
+| Car following, parameters, ballistic update | Treiber, Hennecke & Helbing (2000); reused freeway code |
+| Webster fixed-time plan | Webster, F. V. (1958). *Traffic Signal Settings*, Road Research Technical Paper 39; FHWA Traffic Signal Timing Manual (2008), ch. 5 |
+| Yellow and all-red intervals, 3.05 m/s² stopping deceleration | ITE Traffic Engineering Handbook clearance-interval formulas; FHWA Signal Timing Manual, ch. 5 |
+| Actuated minimum green, unit extension, gap-out/max-out, rest in green | FHWA Signal Timing Manual, ch. 5 (basic actuated controller operation) |
+| Cumulative-count queue estimate | Input–output (cumulative curve) method, Daganzo (1997) ch. 2 |
+| Pressure rule, thresholds, detector placement, geometry, demand, all numerical values | Explicit, uncalibrated project assumptions |
+| Simulation, detectors, accounting, visualization | Project implementation; no third-party code copied |
+
+Claude assisted the redesign of this branch (replacing an earlier point-queue prototype), the verification scripts and this README; all numbers come from the reproducible runs in this repository and were checked with `python3 run.py check intersection`. Students must understand, verify and extend the work and disclose their actual contributions.
