@@ -102,6 +102,8 @@ Seconds and metres internally. Small standalone examples: `freeway/test_drivers.
 
 In neither environment does EMA beat the moving average: demand changes in steps, both methods lag one interval, and EMA's weight on the latest value amplifies count noise. A kept negative result.
 
+Figures 3 and 4 are freeway results: Figure 3 the on-road count estimate against the withheld truth (normal and faults), Figure 4 the 30 s forecast MAE of both methods. Intersection estimate/forecast curves are in the `intersection.html` replay.
+
 ![Figure 3](../results/figures/fig3_estimate_vs_truth.png)
 ![Figure 4](../results/figures/fig4_forecast_mae.png)
 
@@ -165,6 +167,11 @@ E9 (delay veh·min; peak discharge at 900 m in veh/h in parentheses):
 | Ramp at 500 m, default demand | 195 (2,743) | 233 (2,623) | 219 (2,606) |
 | Ramp at 500 m, 2,400 + 900 | 173 (2,657) | 211 (2,589) | 173 (2,657) |
 
+Figure 1: centre-lane time–space trajectories for the five modes (shaded: 240–480 s peak). Figure 2: total delay by mode, including residual queues and boundary waits. (Figure labels are in Chinese.)
+
+![Figure 1](../results/figures/fig1_trajectories.png)
+![Figure 2](../results/figures/fig2_delay_by_mode.png)
+
 **Intersection**: one arrival table per scenario for all four controllers, 900 s; delay in veh·min including boundary waits and unfinished trips. Parentheses: change relative to fixed.
 
 | # | Scenario | Prediction | fixed | actuated | adaptive | no_forecast | Interpretation |
@@ -177,8 +184,6 @@ E9 (delay veh·min; peak discharge at 900 m in veh/h in parentheses):
 
 All 16 runs: red-light runs 0, both groups in the conflict box 0, all-red crossings 0.
 
-![Figure 1](../results/figures/fig1_trajectories.png)
-![Figure 2](../results/figures/fig2_delay_by_mode.png)
 
 ## 7. Why freeway metering is not better than no metering
 
@@ -187,6 +192,8 @@ All 16 runs: red-light runs 0, both groups in the conflict box 0, all-red crossi
 3. **Ramp and bottleneck are on opposite sides.** The closed lane is the left one; the ramp enters the right lane, where speed at 550 m stays 18–23 m/s in every mode. Moving the ramp to 500 m (E9) does not change this.
 
 Analytic comparison: with mean parameters the IDM equilibrium capacity is 1,772 veh/h per lane, 3,544 for two lanes; the simulated bottleneck discharges 2,670, 25% lower, because left-lane vehicles slow and wait to merge before 558 m.
+
+Figure 5: flow at the 900 m detector — the three metering modes discharge almost identically downstream of the bottleneck.
 
 ![Figure 5](../results/figures/fig5_discharge_900m.png)
 
