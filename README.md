@@ -1,27 +1,35 @@
-# CEE281
+# CEE C181/C281 Design Project: Detector-Based Traffic Control
 
-## Important docs for Nasser
+Simulation and detector-based control experiments for a freeway work zone with ramp metering and an isolated signalized intersection (Pathway B), built on a shared Intelligent Driver Model (IDM) car-following framework.
 
-> - `intersection.html`: offline replay of the signal-control prototype. Pick a scenario and a controller, play the simulation, and see the phase timeline, true vs estimated queues, the decision trace at any moment, and the controller comparison table.
-> - `docs/design_record_review3.md`: the design record for intermediate review 3 (English; `_zh` version in Chinese). It states our questions and predictions, the model, interfaces, verification, every experiment with its interpretation, and the current status of final pathway B.
+**Authors:** Jiageng Liu (CEE C281) and Nasser Alsowyan (CEE C181)
 
-Double-click `view.html` to choose a simulation, or open `freeway.html` / `intersection.html` directly. The pages embed their own data; no server is needed.
+---
 
-- `freeway/`: IDM freeway with an on-ramp, including detection, estimation, forecasting, feedback control and execution. See `freeway/README.md`.
-- `intersection/`: isolated signalised intersection (final pathway B). Reuses the freeway IDM vehicle model; advance/stop-line loop detectors → queue estimate → arrival forecast → three controller types (Webster fixed-time, actuated, queue + forecast pressure) plus a no-forecast ablation; four scenarios. See `intersection/README.md`.
-- `docs/`: course project requirements; `docs/design_record_review3_zh.md` (Chinese) and `docs/design_record_review3.md` (English) are the design records for intermediate review 3.
-- `results/`: reproducible experiment data, metrics, logs, reports and HTML viewers.
-- `run.py`: single command-line entry point.
-- `tools/make_figures.py`: builds static figures from existing results into `results/figures/` (requires matplotlib).
+## Repository Structure
 
-Run from this directory:
+- `freeway/`: IDM freeway simulation with a left-lane work-zone closure, on-ramp merging, loop/boundary detection, count-conservation estimation, forecasting, and ramp metering (`freeway/README.md`).
+- `intersection/`: Isolated signalized intersection simulation (Pathway B) reusing the shared IDM model with advance and stop-line loop detectors, queue estimation, arrival forecasting, and four signal control modes (Webster fixed-time, actuated, adaptive queue + forecast pressure, and a no-forecast ablation) across four demand/fault scenarios (`intersection/README.md`).
+- `run.py`: Single command-line entry point for running simulations and automated verification checks.
+- `tools/make_figures.py`: Generates all static report figures from saved simulation outputs into `results/figures/`.
+- `results/`: Reproducible experiment outputs, metrics, logs, summary reports (including `results/intersection/experiment_report.md`), and HTML viewers.
+- `docs/`: Course project documentation and intermediate design records (`docs/design_record_review3.md` and `docs/design_record_review3_zh.md`).
+- `view.html`, `freeway.html`, `intersection.html`: Standalone offline HTML viewers with embedded simulation data (open directly in any browser; no local server required). Note: `.html.in` files are HTML templates and cannot be opened directly.
 
+---
+
+## Requirements
+
+- Python 3.9+
+- `matplotlib` (required for `tools/make_figures.py`)
+
+---
+
+## Reproducing Verification Checks, Tables, and Figures
+
+Run all commands from the repository root directory:
+
+### 1. Run Verification Suite
+Runs independent conservation, trajectory safety (zero vehicle overlaps, negative speeds, closed-lane entries, red-light runs, or simultaneous conflict-box occupancies), detector-count consistency, single-vehicle IDM tests, and time-step sensitivity checks across both environments:
 ```bash
-python3 run.py freeway
-python3 run.py intersection
 python3 run.py check all
-```
-
-A default run also refreshes the matching viewer page in this directory. Custom experiments with `--output` update only the given directory. `.html.in` files are templates and cannot be opened directly.
-
-For the intersection, the four controllers of each scenario share one arrival table; red-light runs and simultaneous conflict-box occupancy must be zero and are asserted by `run.py check intersection`. Comparison results, including the negative result that adaptive control is worse than fixed-time under heavy demand, are in `results/intersection/experiment_report.md`.
