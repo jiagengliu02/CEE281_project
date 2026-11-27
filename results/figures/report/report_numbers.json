@@ -1,0 +1,93 @@
+{
+  "queue_tail_speed_mps": -1.0,
+  "queue_tail_min_m": 320.0,
+  "idm_capacity_vphpl": 1772,
+  "idm_critical_density_vpkm": 30.3,
+  "loop550_congested_density_vpkm": 71.6,
+  "loop550_congested_flow_vphpl": 545,
+  "exits_at_480s": {
+    "open": 328,
+    "closure": 289,
+    "fixed": 282,
+    "adaptive": 286
+  },
+  "max_ramp_queue": {
+    "open": 4,
+    "closure": 4,
+    "fixed": 16,
+    "adaptive": 16
+  },
+  "arrivals_at_480s": 370,
+  "estimate_mae_veh": {
+    "adaptive": 2.23,
+    "adaptive_fault": 3.98
+  },
+  "ix_delay_vehmin": {
+    "fixed": [
+      260.5,
+      468.9,
+      468.9,
+      1458.5
+    ],
+    "actuated": [
+      330.2,
+      358.3,
+      421.4,
+      1426.0
+    ],
+    "adaptive": [
+      246.3,
+      381.7,
+      351.6,
+      1969.5
+    ],
+    "adaptive_no_forecast": [
+      551.2,
+      695.6,
+      592.9,
+      2376.9
+    ]
+  },
+  "heavy_peak": {
+    "N": {
+      "true": 30,
+      "estimate": 13
+    },
+    "E": {
+      "true": 39,
+      "estimate": 14
+    }
+  },
+  "freeway_summary": {
+    "open": {
+      "delay_vehmin": 31.0,
+      "exited": 416
+    },
+    "closure": {
+      "delay_vehmin": 203.4,
+      "exited": 372
+    },
+    "fixed": {
+      "delay_vehmin": 239.7,
+      "exited": 367
+    },
+    "adaptive": {
+      "delay_vehmin": 208.4,
+      "exited": 372
+    },
+    "adaptive_fault": {
+      "delay_vehmin": 215.4,
+      "exited": 369
+    }
+  },
+  "loop550": {
+    "open": {
+      "longest_congested_run": 0,
+      "min_interval_speed_mps": 24.6
+    },
+    "closure": {
+      "longest_congested_run": 10,
+      "min_interval_speed_mps": 7.0
+    }
+  }
+}

@@ -1,57 +1,89 @@
 # CEE C181/C281 Design Project: Detector-Based Traffic Control
 
-Simulation and detector-based control experiments for a freeway work zone with ramp metering and an isolated signalized intersection (Pathway B), built on a shared Intelligent Driver Model (IDM) car-following framework.
+Simulation and detector-based control experiments on one shared Intelligent Driver Model (IDM):
+
+1. **Freeway work zone.** A 1 km, three-lane freeway with a left-lane closure (500 to 850 m), an on-ramp at 250 m and a ramp meter. The meter sees only 30 s detector counts.
+2. **Signalized intersection (Pathway B).** Four 300 m approaches and two phases. Four controllers are compared on identical arrivals: Webster fixed time, actuated, adaptive (queue + forecast pressure), and adaptive without the forecast (ablation).
+
+In both environments the controller never reads the simulated state. It estimates the state from detector reports, forecasts the next interval, and then acts.
 
 **Authors:** Jiageng Liu (CEE C281) and Nasser Alsowyan (CEE C181)
 
 ---
 
-## Repository Structure
+## Quick start
 
-- `freeway/`: IDM freeway simulation with a left-lane work-zone closure, on-ramp merging, loop and boundary detection, count-conservation state estimation, forecasting, and ramp metering. See `freeway/README.md`.
-- `intersection/`: Isolated signalized intersection simulation (Pathway B) reusing the shared IDM vehicle model with advance and stop-line loop detectors, queue estimation, arrival forecasting, and four control modes (Webster fixed-time, actuated, adaptive queue + forecast pressure, and a no-forecast ablation) across four scenarios. See `intersection/README.md`.
-- `run.py`: Single command-line entry point for running simulations and automated verification checks.
-- `tools/make_figures.py`: Generates static figures from existing simulation outputs into `results/figures/` (requires `matplotlib`).
-- `results/`: Reproducible experiment data, metrics, logs, summary reports (including `results/intersection/experiment_report.md`), and offline HTML viewers.
-- `docs/`: Course project documentation and intermediate design records (`docs/design_record_review3.md` and `docs/design_record_review3_zh.md`).
-- `view.html`, `freeway.html`, `intersection.html`: Standalone offline HTML viewers with embedded simulation data (open directly in any browser; no local server required). Note: `.html.in` files are HTML templates and cannot be opened directly.
+Python 3.9+ and `matplotlib` are the only requirements. Run every command from the repository root.
 
----
-
-## Requirements
-
-- Python 3.9+
-- `matplotlib` (required for `tools/make_figures.py`)
+    pip install matplotlib
+    python3 run.py check all              # verification suite, about 1.5 min
+    python3 run.py freeway                # 5 freeway runs, about 30 s
+    python3 run.py intersection           # 16 intersection runs, about 50 s
+    python3 tools/make_report_figures.py  # report figures 1-8 and quoted numbers
 
 ---
 
-## Reproducing Checks, Experiments, Tables, and Figures
+## Key results
 
-Run all commands from the repository root directory:
-
-### 1. Run Verification Suite
-Runs conservation checks, trajectory safety assertions (zero vehicle overlaps, negative speeds, closed-lane entries, red-light runs, or simultaneous conflict-box occupancies), detector-count consistency checks, single-vehicle IDM tests, and time-step checks across both environments:
-
-    python3 run.py check all
-
-*(You can also run intersection-specific safety and consistency checks via `python3 run.py check intersection`.)*
-
-### 2. Run Experiments & Reproduce Summary Tables
-Executes the default freeway and intersection experiment suites, writes metrics, logs, and reports to `results/` (including `results/intersection/experiment_report.md`), and refreshes the matching offline HTML viewers in the root directory:
-
-    python3 run.py freeway
-    python3 run.py intersection
-
-- **Custom output directories:** Pass `--output <dir>` to write custom experiment outputs to a specified directory without modifying the default viewer files.
-- **Shared arrival tables & safety guarantees:** For intersection runs, the four controllers in each scenario share one arrival table, with zero red-light runs and zero simultaneous conflict-box occupancies enforced by verification checks.
-
-### 3. Reproduce Report Figures
-Builds static figures from existing simulation results into `results/figures/`:
-
-    python3 tools/make_figures.py
+| | |
+|---|---|
+| ![Speed contour](results/figures/report/fig02_speed_contour.png) | **The closure creates a queue that outlasts the peak.** Without the work zone, speeds stay above 20 m/s. With the left lane closed, a low-speed region forms at the taper at about 300 s and its tail moves upstream at about 1 m/s. |
+| ![Cumulative curves](results/figures/report/fig04_cumulative_curves.png) | **Ramp metering moves the queue but does not shrink it.** The exit curves of all three closure runs coincide, so the bottleneck discharges the same flow with or without metering. Metering only moves vehicles from the mainline to the ramp. |
+| ![Intersection delay](results/figures/report/fig06_intersection_delay.png) | **Responsive control wins when demand shifts and loses when the intersection is saturated.** Actuated and adaptive control cut delay by 24% and 19% under the directional shift. Adaptive control is 35% worse than fixed time under heavy demand. |
 
 ---
 
-## Interactive Offline Viewers
+## Reproducing the mid-report
 
-Double-click `view.html` to choose a simulation, or open `freeway.html` or `intersection.html` directly in a browser. Each page embeds its own data and requires no local server. In `intersection.html`, you can select a scenario and controller, play back the simulation, and inspect the phase timeline, true vs. estimated queues, controller decision traces at any time step, and the controller comparison table.
+`python3 run.py freeway` and `python3 run.py intersection` write all raw outputs to `results/`. `python3 tools/make_report_figures.py` reads those outputs, writes the figures below to `results/figures/report/`, and writes every number quoted in the report to `results/figures/report/report_numbers.json`. It never re-runs a simulation.
+
+| Report item | Source file | Produced by |
+|---|---|---|
+| Fig. 1, layout of both environments | `results/figures/report/fig01_layout.png` | `tools/make_report_figures.py` |
+| Fig. 2, freeway speed contour | `results/figures/report/fig02_speed_contour.png` | `tools/make_report_figures.py` |
+| Fig. 3, flow-density diagram | `results/figures/report/fig03_fundamental_diagram.png` | `tools/make_report_figures.py` |
+| Fig. 4, cumulative curves and ramp queue | `results/figures/report/fig04_cumulative_curves.png` | `tools/make_report_figures.py` |
+| Fig. 5, estimate vs. hidden state | `results/figures/report/fig05_estimate_vs_truth.png` | `tools/make_report_figures.py` |
+| Fig. 6, intersection delay | `results/figures/report/fig06_intersection_delay.png` | `tools/make_report_figures.py` |
+| Fig. 7, adaptive phases, directional shift | `results/figures/report/fig07_phase_timeline_shift.png` | `tools/make_report_figures.py` |
+| Fig. 8, adaptive phases, heavy demand | `results/figures/report/fig08_phase_timeline_heavy.png` | `tools/make_report_figures.py` |
+| Freeway results table | `results/freeway/summary.csv`, `results/freeway/experiment_report.md` | `python3 run.py freeway` |
+| Intersection results table | `results/intersection/summary.csv`, `results/intersection/experiment_report.md` | `python3 run.py intersection` |
+| Verification claims | `results/freeway/verification.json`, `results/intersection/verification.json` | `python3 run.py check all` |
+
+The freeway sensitivity runs (heavy demand, homogeneous drivers, merge at the taper, no forecast, Δt halved) use the configs in `freeway/configs/`. See `freeway/README.md` for the commands.
+
+---
+
+## Repository structure
+
+- `freeway/`: IDM freeway simulation with the work-zone closure, on-ramp merging, loop and boundary detectors, count-conservation estimation, forecasting and ramp metering. See `freeway/README.md`.
+- `intersection/`: Signalized intersection on the same IDM vehicle model, with advance and stop-line loops, queue estimation, arrival forecasting and the four controllers. See `intersection/README.md`.
+- `run.py`: Single entry point for simulations and verification checks.
+- `tools/make_report_figures.py`: English report figures and quoted numbers (above).
+- `tools/make_figures.py`: The earlier quick-look figure script (labels in Chinese), kept for reference.
+- `results/`: Experiment data, metrics, logs, summary reports and figures.
+- `docs/`: Course documents and design records (`docs/design_record_review3.md`).
+- `view.html`, `freeway.html`, `intersection.html`: Interactive viewers (see below). The `.html.in` files are templates and cannot be opened directly.
+
+---
+
+## Verification
+
+`python3 run.py check all` runs the following checks across both environments:
+
+- Vehicle conservation at every step.
+- Trajectory audits: no overlaps, negative speeds, closed-lane entries, red-light runs, or simultaneous conflict-box occupancy.
+- Detector counts compared against counts recomputed from trajectories.
+- Single-vehicle IDM tests.
+- A time-step halving test.
+
+Use `python3 run.py check freeway` or `python3 run.py check intersection` to run one environment.
+
+---
+
+## Interactive viewers
+
+`freeway.html` and `intersection.html` replay the simulations, with true versus estimated queues, the signal phase timeline, controller decisions at every step, and the controller comparison table. `view.html` links to both pages. Each page embeds its own data and needs no server.
+
+**GitHub shows `.html` files as source code instead of running them.** To use a viewer, download the repository (green **Code** button, then **Download ZIP**), unzip it, and double-click `freeway.html` or `intersection.html`.

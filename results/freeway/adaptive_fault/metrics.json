@@ -1,0 +1,77 @@
+{
+  "mode": "adaptive_fault",
+  "model_version": "idm-freeway-ramp-motion-3.1",
+  "controller_version": "forecast-inventory-meter-1.0",
+  "forecast": {
+    "moving_average": {
+      "main_arrivals": {
+        "samples": 13,
+        "mae_veh": 3.4615384615384617
+      },
+      "main_entries": {
+        "samples": 13,
+        "mae_veh": 3.4615384615384617
+      },
+      "ramp_arrivals": {
+        "samples": 13,
+        "mae_veh": 0.7435897435897435
+      },
+      "ramp_entries": {
+        "samples": 13,
+        "mae_veh": 0.6837606837606838
+      },
+      "exits": {
+        "samples": 13,
+        "mae_veh": 1.6153846153846148
+      }
+    },
+    "ema": {
+      "main_arrivals": {
+        "samples": 13,
+        "mae_veh": 3.648776182061299
+      },
+      "main_entries": {
+        "samples": 13,
+        "mae_veh": 3.648776182061299
+      },
+      "ramp_arrivals": {
+        "samples": 13,
+        "mae_veh": 0.6602301758931726
+      },
+      "ramp_entries": {
+        "samples": 13,
+        "mae_veh": 0.6408241749560356
+      },
+      "exits": {
+        "samples": 13,
+        "mae_veh": 2.6977560138839367
+      }
+    }
+  },
+  "fallback_time_s": 134.9,
+  "road_estimate_mae_veh": 4.278586278586278,
+  "ramp_estimate_mae_veh": 1.106029106029106,
+  "generated_vehicles": 440,
+  "generated_main": 380,
+  "generated_ramp": 60,
+  "exited_vehicles": 369,
+  "remaining_on_road": 55,
+  "remaining_main_queue": 0,
+  "remaining_ramp_queue": 16,
+  "max_main_queue": 0,
+  "max_ramp_queue": 16,
+  "max_road_queue": 35,
+  "throughput_vph": 2214.0,
+  "total_time_in_system_vehicle_s": 27715.0,
+  "total_delay_vehicle_s": 12926.91,
+  "minimum_gap_m": 1.5342,
+  "strongest_braking_mps2": -6,
+  "safety_interventions": 0,
+  "ramp_minimum_gap_m": 1.9856,
+  "ramp_distance_m": 10965.332,
+  "yield_records": 100,
+  "lane_changes": 463,
+  "mandatory_merges": 75,
+  "conservation_passed": true,
+  "closed_lane_violations": 0
+}
